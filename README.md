@@ -13,13 +13,23 @@ Gerenciador de patch avançado usando Xdelta para criar e aplicar patches de for
 - ✅ **Suporte multiplataforma** (Windows, Linux, macOS)
 - ✅ **Processamento em lote** para múltiplos arquivos
 - ✅ **Métricas detalhadas** de compressão e performance
+- ✅ **Análise avançada de patches** com diferentes níveis de compressão
 - ✅ **Verificação de integridade** para garantir precisão
+- ✅ **Otimizações para arquivos grandes** com processamento inteligente
 - ✅ **Interface simples** e intuitiva
 - ✅ **Documentação completa** com exemplos práticos
 
 ## 📋 Pré-requisitos
 
 ### Instalação do Xdelta3
+
+**Método Automático (Recomendado):**
+```bash
+# Usando o script de instalação
+npm run install:xdelta3
+```
+
+**Método Manual:**
 
 **Windows:**
 ```bash
@@ -57,6 +67,28 @@ brew install xdelta3
 npm install advanced-patch-generator
 ```
 
+## 🏗️ Estrutura do Projeto
+
+O projeto foi reorganizado para melhor separação de responsabilidades:
+
+```
+src/
+├── constants/          # Constantes e configurações
+├── lib/               # Bibliotecas principais
+├── utils/             # Utilitários reutilizáveis
+├── validations/       # Validações de entrada
+└── index.js           # Ponto de entrada principal
+```
+
+### Módulos Disponíveis
+
+- **`AdvancedPatchGenerator`**: Classe principal para gerenciamento de patches
+- **`MetricsUtils`**: Utilitários para formatação de métricas e tempo
+- **`CommandUtils`**: Utilitários para execução de comandos
+- **`DisplayUtils`**: Utilitários para exibição e formatação
+- **`FileValidation`**: Validações de arquivos e caminhos
+- **Constantes**: Configurações padrão e mensagens
+
 ## 🧪 Uso Rápido
 
 ### Teste Inicial
@@ -68,6 +100,20 @@ npm install advanced-patch-generator
    npm install
    ```
 
+### Teste para Arquivos Grandes
+
+Para arquivos grandes (>100MB), use o teste específico:
+
+```bash
+npm run test:large
+```
+
+Este teste aplica otimizações automáticas para arquivos grandes, incluindo:
+- Compressão reduzida para melhor performance
+- Verificação opcional para economizar memória
+- Timeouts aumentados
+- Processamento em streaming
+
 2. **Coloque seus arquivos:**
    - Arquivo original em `files/old/`
    - Arquivo atualizado em `files/new/`
@@ -77,8 +123,14 @@ npm install advanced-patch-generator
    npm test
    ```
 
+4. **Veja os exemplos da nova estrutura:**
+   ```bash
+   node examples/usage-examples.js
+   ```
+
 ### Uso Programático
 
+#### Importação Principal
 ```javascript
 import AdvancedPatchGenerator from 'advanced-patch-generator';
 
@@ -114,6 +166,21 @@ const verification = await patchGen.verifyPatch(
 );
 
 console.log(`Patch válido: ${verification.isValid}`);
+```
+
+#### Importação Específica de Módulos
+```javascript
+import { AdvancedPatchGenerator } from 'advanced-patch-generator/lib';
+import { MetricsUtils, DisplayUtils } from 'advanced-patch-generator/utils';
+import { FileValidation } from 'advanced-patch-generator/validations';
+import { DEFAULT_OPTIONS } from 'advanced-patch-generator/constants';
+
+// Usar utilitários diretamente
+const bytesFormatados = MetricsUtils.formatBytes(1048576); // "1 MB"
+const tempoFormatado = MetricsUtils.formatTime(1500); // "1.50s"
+
+// Usar validações
+const nivelValido = FileValidation.isValidCompressionLevel(5); // true
 ```
 
 ## 📚 API Completa
@@ -239,6 +306,114 @@ const results = await patchGen.applyBatchPatches(
   { file: 'file2.txt', status: 'success' }
 ]
 ```
+
+### Configurações para Arquivos Grandes
+
+Para arquivos grandes (>100MB), use configurações otimizadas:
+
+```javascript
+import AdvancedPatchGenerator from './src/lib/AdvancedPatchGenerator.js';
+
+const patchGen = new AdvancedPatchGenerator({
+  compression: 3, // Compressão baixa para arquivos grandes
+  verify: false, // Pula verificação para economizar memória
+  largeFileThreshold: 50 * 1024 * 1024, // 50MB
+  timeout: 900000, // 15 minutos
+  memoryLimit: 256 * 1024 * 1024 // 256MB
+});
+
+// Verificar se é arquivo grande
+import LargeFileUtils from './src/utils/largeFileUtils.js';
+
+const fileSize = await LargeFileUtils.getFileSize('arquivo.grf');
+const isLarge = await LargeFileUtils.isLargeFile('arquivo.grf');
+
+if (isLarge) {
+  console.log('Arquivo grande detectado. Aplicando otimizações...');
+}
+```
+
+### Análise Avançada de Patches
+
+O `PatchAnalyzer` permite analisar patches com diferentes níveis de compressão para encontrar a melhor configuração para seus arquivos.
+
+#### `analyzePatch(oldFile, newFile, outputDir, options)`
+
+Analisa patches com diferentes níveis de compressão.
+
+```javascript
+import { PatchAnalyzer } from 'advanced-patch-generator';
+
+const analyzer = new PatchAnalyzer({
+  showProgress: true,
+  includeUncompressed: true,
+  compressionLevels: [0, 1, 3, 6, 9]
+});
+
+const results = await analyzer.analyzePatch(
+  'files/old/exemplo.txt',
+  'files/new/exemplo.txt',
+  'files/patches/analysis'
+);
+
+// Exibe resultados de forma bonita
+PatchAnalyzer.displayAnalysisResults(results);
+```
+
+**Resultado da análise:**
+```javascript
+{
+  oldFile: { path: 'files/old/exemplo.txt', size: 1024, sizeFormatted: '1 KB' },
+  newFile: { path: 'files/new/exemplo.txt', size: 2048, sizeFormatted: '2 KB' },
+  analysis: [
+    {
+      testName: 'uncompressed',
+      compressionLevel: -1,
+      patchFile: 'files/patches/analysis/patch_uncompressed.xdelta',
+      patchInfo: { size: 1024, sizeFormatted: '1 KB' },
+      duration: 50,
+      durationFormatted: '50ms',
+      success: true,
+      compressionRatio: 50.00,
+      sizeSaved: 1024,
+      sizeSavedFormatted: '1 KB'
+    },
+    // ... outros níveis de compressão
+  ],
+  summary: {
+    totalTests: 6,
+    successfulTests: 6,
+    bestCompression: { /* melhor resultado */ },
+    worstCompression: { /* pior resultado */ },
+    averageCompressionRatio: '75.50',
+    totalSizeSaved: 6144,
+    totalSizeSavedFormatted: '6 KB'
+  },
+  duration: 500,
+  durationFormatted: '500ms'
+}
+```
+
+#### Comando CLI para Análise
+
+```bash
+# Análise básica
+node scripts/analyze-patches.js files/old/file.txt files/new/file.txt
+
+# Análise com níveis específicos
+node scripts/analyze-patches.js old.txt new.txt --compression 0,3,9
+
+# Análise sem teste sem compressão
+node scripts/analyze-patches.js old.txt new.txt --no-uncompressed
+
+# Análise com diretório de saída personalizado
+node scripts/analyze-patches.js old.txt new.txt --output-dir ./my-patches
+
+# Ver ajuda
+node scripts/analyze-patches.js --help
+```
+
+### Métodos Principais
 
 #### `checkXdelta()`
 
@@ -412,5 +587,6 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 - 📧 Email: seu.email@exemplo.com
 - 🐛 Issues: [GitHub Issues](https://github.com/seuusuario/advanced-patch-generator/issues)
 - 📖 Documentação: [GitHub Wiki](https://github.com/seuusuario/advanced-patch-generator/wiki)
-#   A d v a n c e d - P a t c h - G e n e r a t o r  
+#   A d v a n c e d - P a t c h - G e n e r a t o r 
+ 
  

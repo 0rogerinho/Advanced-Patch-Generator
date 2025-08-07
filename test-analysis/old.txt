@@ -1,0 +1,4 @@
+Este é um arquivo de teste.
+Contém algumas linhas de texto.
+Para demonstrar a funcionalidade de patches.
+Versão 1.0

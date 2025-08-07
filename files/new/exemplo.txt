@@ -1,4 +1,0 @@
-Este é um arquivo de exemplo para demonstrar o funcionamento dos patches.
-Conteúdo atualizado do arquivo com mudanças.
-Versão 2.0
-Nova linha adicionada para demonstrar as diferenças.

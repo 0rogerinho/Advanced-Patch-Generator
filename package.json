@@ -9,6 +9,7 @@
   },
   "scripts": {
     "test": "node test.js",
+    "test:large": "node test-large-files.js",
     "start": "node src/index.js",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
@@ -17,7 +18,10 @@
     "prepublishOnly": "npm test",
     "publish:patch": "node scripts/publish.js patch",
     "publish:minor": "node scripts/publish.js minor",
-    "publish:major": "node scripts/publish.js major"
+    "publish:major": "node scripts/publish.js major",
+    "install:xdelta3": "node scripts/install-xdelta3.js",
+    "analyze": "node scripts/analyze-patches.js",
+    "test:analysis": "node test-analysis.js"
   },
   "keywords": [
     "patch",

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import AdvancedPatchGenerator from './src/index.js';
+import AdvancedPatchGenerator from './src/lib/AdvancedPatchGenerator.js';
 import fs from 'fs-extra';
 import path from 'path';
 import readline from 'readline';
@@ -21,9 +21,14 @@ async function main() {
   console.log('=====================================\n');
 
   const patchGen = new AdvancedPatchGenerator({
-    compression: 6,
+    commonFiles: false,
+    compression: 0, // Desabilita a compressão
     verify: true,
-    showProgress: true
+    showProgress: true,
+    // Novas configurações para arquivos grandes
+    largeFileThreshold: 100 * 1024 * 1024, // 100MB
+    timeout: 600000, // 10 minutos para arquivos grandes
+    memoryLimit: 512 * 1024 * 1024 // 512MB
   });
 
   try {
