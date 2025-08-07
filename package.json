@@ -1,0 +1,62 @@
+{
+  "name": "advanced-patch-generator",
+  "version": "1.0.0",
+  "description": "Gerenciador de patch avançado usando Xdelta para criar e aplicar patches de forma eficiente",
+  "main": "src/index.js",
+  "type": "module",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "scripts": {
+    "test": "node test.js",
+    "start": "node src/index.js",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "docs": "jsdoc src/ -d docs",
+    "prepare": "npm run lint",
+    "prepublishOnly": "npm test",
+    "publish:patch": "node scripts/publish.js patch",
+    "publish:minor": "node scripts/publish.js minor",
+    "publish:major": "node scripts/publish.js major"
+  },
+  "keywords": [
+    "patch",
+    "xdelta",
+    "diff",
+    "binary",
+    "delta",
+    "compression",
+    "file-diff",
+    "binary-diff",
+    "delta-encoding"
+  ],
+  "author": {
+    "name": "Seu Nome",
+    "email": "seu.email@exemplo.com",
+    "url": "https://github.com/seuusuario"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seuusuario/advanced-patch-generator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/seuusuario/advanced-patch-generator/issues"
+  },
+  "homepage": "https://github.com/seuusuario/advanced-patch-generator#readme",
+  "dependencies": {
+    "fs-extra": "^11.1.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.0.0",
+    "jsdoc": "^4.0.0"
+  },
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

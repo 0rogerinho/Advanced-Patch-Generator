@@ -1,0 +1,3 @@
+Este é um arquivo de exemplo para demonstrar o funcionamento dos patches.
+Conteúdo original do arquivo.
+Versão 1.0
