@@ -1,5 +1,7 @@
 import { exec, spawn } from 'child_process';
 import { promisify } from 'util';
+import fs from 'fs-extra';
+import path from 'path';
 
 const execAsync = promisify(exec);
 
@@ -106,7 +108,7 @@ class CommandUtils {
             code,
             command,
             args,
-            error: `Process exited with code ${code}`
+            error: `Command failed with code ${code}`
           });
         }
       });
@@ -115,12 +117,110 @@ class CommandUtils {
         if (timeoutHandle) clearTimeout(timeoutHandle);
         reject({
           success: false,
-          error: error.message,
+          stdout,
+          stderr,
+          code: null,
           command,
-          args
+          args,
+          error: error.message
         });
       });
     });
+  }
+
+  /**
+   * Busca o caminho do Xdelta3 no sistema
+   * @returns {Promise<string|null>} Caminho do Xdelta3 ou null se não encontrado
+   */
+  static async findXdelta3Path() {
+    const possiblePaths = [
+      // Caminhos padrão do Windows
+      'xdelta3.exe',
+      'xdelta3',
+      'C:\\ProgramData\\chocolatey\\bin\\xdelta3.exe',
+      'C:\\ProgramData\\chocolatey\\bin\\xdelta3',
+      'C:\\tools\\xdelta3\\xdelta3.exe',
+      'C:\\tools\\xdelta3\\xdelta3',
+      // Caminhos do Scoop
+      `${process.env.USERPROFILE}\\scoop\\apps\\xdelta3\\current\\xdelta3.exe`,
+      `${process.env.USERPROFILE}\\scoop\\apps\\xdelta3\\current\\xdelta3`,
+      // Caminhos do Winget
+      'C:\\Program Files\\WindowsApps\\xdelta3\\xdelta3.exe',
+      // Caminhos do PATH
+      'xdelta3.exe',
+      'xdelta3'
+    ];
+
+    // Primeiro, tenta encontrar no PATH
+    try {
+      const whereResult = await this.executeCommand(
+        process.platform === 'win32' ? 'where xdelta3' : 'which xdelta3'
+      );
+      
+      if (whereResult.success && whereResult.stdout.trim()) {
+        const paths = whereResult.stdout.trim().split('\n');
+        for (const path of paths) {
+          const trimmedPath = path.trim();
+          if (trimmedPath && await this.testXdelta3Path(trimmedPath)) {
+            return trimmedPath;
+          }
+        }
+      }
+    } catch (error) {
+      // Continua para os outros métodos
+    }
+
+    // Testa caminhos específicos
+    for (const testPath of possiblePaths) {
+      if (await this.testXdelta3Path(testPath)) {
+        return testPath;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Testa se um caminho do Xdelta3 é válido
+   * @param {string} xdeltaPath - Caminho para testar
+   * @returns {Promise<boolean>} True se o caminho é válido
+   */
+  static async testXdelta3Path(xdeltaPath) {
+    try {
+      // Verifica se o arquivo existe
+      if (process.platform === 'win32' && xdeltaPath.includes('.exe')) {
+        const exists = await fs.pathExists(xdeltaPath);
+        if (!exists) return false;
+      }
+
+      // Testa executando o comando de ajuda
+      const result = await this.spawnCommand(xdeltaPath, ['-h'], { timeoutMs: 5000 });
+      return result.success;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Escapa caminhos com espaços para uso em comandos
+   * @param {string} filePath - Caminho do arquivo
+   * @returns {string} Caminho escapado
+   */
+  static escapePath(filePath) {
+    if (!filePath) return '';
+    
+    // Remove aspas existentes
+    let cleanPath = filePath.replace(/^["']|["']$/g, '');
+    
+    // Escapa aspas internas se necessário
+    cleanPath = cleanPath.replace(/"/g, '\\"');
+    
+    // Adiciona aspas se contém espaços ou caracteres especiais
+    if (cleanPath.includes(' ') || cleanPath.includes('&') || cleanPath.includes('|') || cleanPath.includes(';')) {
+      return `"${cleanPath}"`;
+    }
+    
+    return cleanPath;
   }
 
   /**
@@ -164,8 +264,13 @@ class CommandUtils {
       args.push('-P', '131072');   // 128KB
     }
 
-    // Caminhos adicionados sem quotes para uso com spawn; a string é quoteada em fullCommand
-    args.push('-s', oldFile, newFile, patchFile);
+    // Escapa caminhos para evitar problemas com espaços
+    const escapedOldFile = this.escapePath(oldFile);
+    const escapedNewFile = this.escapePath(newFile);
+    const escapedPatchFile = this.escapePath(patchFile);
+    
+    // Caminhos adicionados com escape adequado
+    args.push('-s', escapedOldFile, escapedNewFile, escapedPatchFile);
     
     const filteredArgs = args.filter(Boolean);
 
@@ -173,8 +278,8 @@ class CommandUtils {
       command: xdeltaPath,
       args: filteredArgs,
       fullCommand: process.platform === 'win32'
-        ? `"${xdeltaPath}" ${filteredArgs.map(a => (String(a).includes(' ') ? `"${a}"` : a)).join(' ')}`
-        : `${xdeltaPath} ${filteredArgs.map(a => (String(a).includes(' ') ? `"${a}"` : a)).join(' ')}`
+        ? `"${xdeltaPath}" ${filteredArgs.join(' ')}`
+        : `${xdeltaPath} ${filteredArgs.join(' ')}`
     };
   }
 
@@ -190,22 +295,27 @@ class CommandUtils {
   static buildApplyPatchCommand(xdeltaPath, oldFile, patchFile, newFile, options = {}) {
     const verifyFlag = options.verify ? '-v' : '';
     
+    // Escapa caminhos para evitar problemas com espaços
+    const escapedOldFile = this.escapePath(oldFile);
+    const escapedPatchFile = this.escapePath(patchFile);
+    const escapedNewFile = this.escapePath(newFile);
+    
     const args = [
       verifyFlag,
       '-d', // decode
       '-f', // force overwrite
       '-s', // source file
-      oldFile,
-      patchFile,
-      newFile
+      escapedOldFile,
+      escapedPatchFile,
+      escapedNewFile
     ].filter(Boolean);
 
     return {
       command: xdeltaPath,
       args,
       fullCommand: process.platform === 'win32'
-        ? `"${xdeltaPath}" ${args.map(a => (String(a).includes(' ') ? `"${a}"` : a)).join(' ')}`
-        : `${xdeltaPath} ${args.map(a => (String(a).includes(' ') ? `"${a}"` : a)).join(' ')}`
+        ? `"${xdeltaPath}" ${args.join(' ')}`
+        : `${xdeltaPath} ${args.join(' ')}`
     };
   }
 

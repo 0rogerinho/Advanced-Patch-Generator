@@ -124,6 +124,16 @@ class AdvancedPatchGenerator extends EventEmitter {
     });
 
     try {
+      // Primeiro, tenta encontrar o Xdelta3 automaticamente
+      if (!this.xdeltaPath || this.xdeltaPath === 'xdelta3.exe') {
+        const foundPath = await CommandUtils.findXdelta3Path();
+        if (foundPath) {
+          this.xdeltaPath = foundPath;
+          console.log(`🔍 Xdelta3 encontrado em: ${foundPath}`);
+        }
+      }
+
+      // Testa o caminho atual
       const result = await CommandUtils.spawnCommand(this.xdeltaPath, ['-h'], { timeoutMs: 15_000 });
       this._xdeltaChecked = true;
       this._xdeltaAvailable = !!result?.success;

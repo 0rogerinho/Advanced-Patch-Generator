@@ -18,10 +18,22 @@ async function installXdelta3() {
   console.log('🔍 Verificando se o Xdelta3 já está instalado...');
   
   try {
-    const result = await execAsync('xdelta3.exe -h');
-    console.log('✅ Xdelta3 já está instalado e funcionando!');
-    console.log('Versão:', result.stdout.split('\n')[0]);
-    return;
+    // Tenta múltiplos comandos para verificar
+    const commands = ['xdelta3.exe -h', 'xdelta3 -h', 'C:\\ProgramData\\chocolatey\\bin\\xdelta3.exe -h'];
+    
+    for (const cmd of commands) {
+      try {
+        const result = await execAsync(cmd);
+        console.log('✅ Xdelta3 já está instalado e funcionando!');
+        console.log('Comando usado:', cmd);
+        console.log('Versão:', result.stdout.split('\n')[0]);
+        return;
+      } catch (cmdError) {
+        // Continua para o próximo comando
+      }
+    }
+    
+    console.log('❌ Xdelta3 não encontrado. Prosseguindo com a instalação...\n');
   } catch (error) {
     console.log('❌ Xdelta3 não encontrado. Prosseguindo com a instalação...\n');
   }

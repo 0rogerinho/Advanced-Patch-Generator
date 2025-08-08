@@ -52,20 +52,33 @@ export const MESSAGES = {
   XDELTA_NOT_FOUND: 'Xdelta3 não encontrado no sistema.',
   XDELTA_INSTALL_INSTRUCTIONS: `
 📋 Para instalar o Xdelta3 no Windows:
-1. Acesse: https://github.com/jmacd/xdelta/releases
-2. Baixe a versão mais recente para Windows
-3. Extraia o arquivo xdelta3.exe
-4. Coloque o xdelta3.exe em uma pasta no PATH
-   (ex: C:\\Windows\\System32\\ ou adicione ao PATH do sistema)
 
-💡 Alternativas:
-   - Use o Scoop: scoop install xdelta3
-   - Use o Chocolatey: choco install xdelta3
+🔧 Métodos de Instalação:
 
-🔧 Ou configure o caminho manualmente:
+1. Chocolatey (Recomendado):
+   choco install xdelta3
+
+2. Scoop:
+   scoop install xdelta3
+
+3. Winget:
+   winget install xdelta3
+
+4. Download Manual:
+   - Acesse: https://github.com/jmacd/xdelta/releases
+   - Baixe a versão mais recente para Windows
+   - Extraia o arquivo xdelta3.exe
+   - Coloque em uma pasta no PATH
+
+🔧 Configuração Manual:
    const patchGen = new AdvancedPatchGenerator({
-     xdeltaPath: "C:\\caminho\\para\\xdelta3.exe"
+     xdeltaPath: "C:\\ProgramData\\chocolatey\\bin\\xdelta3.exe"
    });
+
+💡 Dicas:
+   - Após instalar, reinicie o terminal
+   - Verifique se está no PATH: where xdelta3
+   - Teste manualmente: xdelta3 -h
 `,
   PATCH_CREATED: '🎉 PATCH CRIADO COM SUCESSO!',
   PATCH_APPLIED: '✅ PATCH APLICADO COM SUCESSO!',

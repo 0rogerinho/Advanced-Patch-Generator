@@ -390,22 +390,56 @@ const results = await patchGen.createBatchPatches(
 - 🤝 **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute to the project
 - 📋 **[CHANGELOG.md](CHANGELOG.md)** - Change history
 
+### Platform-Specific Guides
+
+- 🪟 **[WINDOWS_GUIDE.md](WINDOWS_GUIDE.md)** - Complete Windows setup and usage guide
+
 ## 🔧 Troubleshooting
 
 ### Common Issues
 
 #### Xdelta3 not found
 ```bash
-# Windows
-winget install xdelta3
-# or
+# Windows (Recomendado)
 choco install xdelta3
+
+# Windows (Alternativas)
+scoop install xdelta3
+winget install xdelta3
 
 # macOS
 brew install xdelta
 
 # Linux
 sudo apt-get install xdelta3
+```
+
+#### Windows-specific Issues
+
+**Problema**: "Xdelta3 not found on system" mesmo após instalação
+```bash
+# Solução 1: Reiniciar o terminal
+# Feche e abra um novo terminal/PowerShell
+
+# Solução 2: Verificar instalação
+where xdelta3
+xdelta3 -h
+
+# Solução 3: Configurar caminho manualmente
+const patchGen = new AdvancedPatchGenerator({
+  xdeltaPath: "C:\\ProgramData\\chocolatey\\bin\\xdelta3.exe"
+});
+```
+
+**Problema**: Espaços nos caminhos dos arquivos
+```javascript
+// A biblioteca agora trata automaticamente espaços nos caminhos
+// Mas se ainda houver problemas, use caminhos sem espaços
+const result = await patchGen.createPatch(
+  'C:\\My Files\\old.txt',  // ✅ Funciona
+  'C:\\My Files\\new.txt',  // ✅ Funciona
+  'C:\\My Files\\patch.xdelta'  // ✅ Funciona
+);
 ```
 
 #### Large file processing issues
