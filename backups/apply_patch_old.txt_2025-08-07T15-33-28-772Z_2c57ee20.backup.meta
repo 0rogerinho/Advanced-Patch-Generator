@@ -1,9 +1,0 @@
-{
-  "originalPath": "C:\\Users\\luaan\\Documents\\projetos\\advanced-patch-generator\\test-cli\\old.txt",
-  "backupPath": "backups\\apply_patch_old.txt_2025-08-07T15-33-28-772Z_2c57ee20.backup",
-  "operation": "apply_patch",
-  "timestamp": "2025-08-07T15:33:28.774Z",
-  "fileSize": 27,
-  "fileHash": "2c57ee20f35f22492f5d7cb990624e4972227b9088edd12d51fdf00ba3611f6f",
-  "version": "1.0"
-}

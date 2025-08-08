@@ -19,6 +19,9 @@ class CommandUtils {
       const { stdout, stderr } = await execAsync(command, {
         ...options,
         shell: process.platform === 'win32',
+        // Aumenta buffer padrão para evitar estouro em saídas maiores
+        maxBuffer: 16 * 1024 * 1024, // 16MB
+        timeout: options.timeoutMs || 0,
       });
       
       return {
@@ -64,7 +67,24 @@ class CommandUtils {
         stderr += data.toString();
       });
 
+      let timeoutHandle = null;
+      if (options.timeoutMs && Number.isFinite(options.timeoutMs) && options.timeoutMs > 0) {
+        timeoutHandle = setTimeout(() => {
+          try { child.kill('SIGKILL'); } catch (_) {}
+          reject({
+            success: false,
+            stdout,
+            stderr: `${stderr}\nProcesso finalizado por timeout após ${options.timeoutMs}ms`,
+            code: null,
+            command,
+            args,
+            error: `Process timeout after ${options.timeoutMs}ms`,
+          });
+        }, options.timeoutMs);
+      }
+
       child.on('close', (code) => {
+        if (timeoutHandle) clearTimeout(timeoutHandle);
         // Para comandos de ajuda (-h), o Xdelta3 retorna código 1, mas isso é normal
         const isHelpCommand = args.includes('-h') || args.includes('--help');
         const isSuccess = code === 0 || (isHelpCommand && code === 1);
@@ -92,6 +112,7 @@ class CommandUtils {
       });
 
       child.on('error', (error) => {
+        if (timeoutHandle) clearTimeout(timeoutHandle);
         reject({
           success: false,
           error: error.message,
@@ -112,26 +133,48 @@ class CommandUtils {
    * @returns {string} Comando formatado
    */
   static buildCreatePatchCommand(xdeltaPath, oldFile, newFile, patchFile, options = {}) {
-    const compressionFlag = options.compression ? `-${options.compression}` : '';
+    const compressionFlag = options.compression !== undefined ? `-${options.compression}` : '';
     const verifyFlag = options.verify ? '-v' : '';
+    
+    // Parâmetros otimizados para máxima velocidade (perfil estável)
+    const fileSize = options.fileSize || 0;
+    const isLargeFile = fileSize > 100 * 1024 * 1024; // 100MB
+    const isHugeFile = fileSize > 1024 * 1024 * 1024; // 1GB
+    const isExtremeFile = fileSize > 2 * 1024 * 1024 * 1024; // 2GB
     
     const args = [
       compressionFlag,
       verifyFlag,
       '-e', // encode
       '-f', // force overwrite
-      '-s', // source file
-      oldFile,
-      newFile,
-      patchFile
-    ].filter(Boolean);
+    ];
+    
+    // Otimizações estáveis para velocidade
+    if (isExtremeFile) {
+      // Arquivos muito grandes: janela maior e compressão baixa
+      args.push('-W', '16777216'); // 16MB (máximo)
+      args.push('-P', '262144');   // 256KB
+      // Para estabilidade, não desabilitamos checksums nem instruções
+      // Compressão será controlada pelo nível (-0..-9)
+    } else if (isHugeFile) {
+      args.push('-W', '8388608');  // 8MB
+      args.push('-P', '262144');   // 256KB
+    } else if (isLargeFile) {
+      args.push('-W', '4194304');  // 4MB
+      args.push('-P', '131072');   // 128KB
+    }
+
+    // Caminhos adicionados sem quotes para uso com spawn; a string é quoteada em fullCommand
+    args.push('-s', oldFile, newFile, patchFile);
+    
+    const filteredArgs = args.filter(Boolean);
 
     return {
       command: xdeltaPath,
-      args,
+      args: filteredArgs,
       fullCommand: process.platform === 'win32'
-        ? `"${xdeltaPath}" ${args.join(' ')}`
-        : `${xdeltaPath} ${args.join(' ')}`
+        ? `"${xdeltaPath}" ${filteredArgs.map(a => (String(a).includes(' ') ? `"${a}"` : a)).join(' ')}`
+        : `${xdeltaPath} ${filteredArgs.map(a => (String(a).includes(' ') ? `"${a}"` : a)).join(' ')}`
     };
   }
 
@@ -161,8 +204,8 @@ class CommandUtils {
       command: xdeltaPath,
       args,
       fullCommand: process.platform === 'win32'
-        ? `"${xdeltaPath}" ${args.join(' ')}`
-        : `${xdeltaPath} ${args.join(' ')}`
+        ? `"${xdeltaPath}" ${args.map(a => (String(a).includes(' ') ? `"${a}"` : a)).join(' ')}`
+        : `${xdeltaPath} ${args.map(a => (String(a).includes(' ') ? `"${a}"` : a)).join(' ')}`
     };
   }
 

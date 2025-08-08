@@ -1,23 +1,20 @@
 {
   "env": {
-    "node": true,
-    "es2022": true
+    "es2020": true,
+    "node": true
   },
-  "extends": ["eslint:recommended"],
+  "extends": ["eslint:recommended", "@typescript-eslint/recommended"],
+  "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "ecmaVersion": 2022,
+    "ecmaVersion": 2020,
     "sourceType": "module"
   },
+  "plugins": ["@typescript-eslint"],
   "rules": {
-    "indent": ["error", 2],
-    "linebreak-style": ["error", "unix"],
-    "quotes": ["error", "single"],
-    "semi": ["error", "always"],
-    "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
-    "no-console": "off",
-    "prefer-const": "error",
-    "no-var": "error",
-    "object-shorthand": "error",
-    "prefer-template": "error"
+    "@typescript-eslint/no-unused-vars": "warn",
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/no-inferrable-types": "off"
   }
 }

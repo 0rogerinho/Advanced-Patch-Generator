@@ -1,7 +1,4 @@
 {
-  "tags": {
-    "allowUnknownTags": true
-  },
   "source": {
     "include": ["src"],
     "includePattern": ".js$",
@@ -15,6 +12,27 @@
   "opts": {
     "destination": "./docs",
     "recurse": true,
-    "readme": "./README.md"
+    "readme": "./README.md",
+    "template": "node_modules/clean-jsdoc-theme",
+    "theme_opts": {
+      "title": "Advanced Patch Generator Documentation",
+      "menu": {
+        "Github repo": {
+          "href": "https://github.com/advanced-patch-generator/advanced-patch-generator",
+          "target": "_blank",
+          "class": "menu-item",
+          "id": "repository"
+        }
+      }
+    }
+  },
+  "markdown": {
+    "parser": "gfm",
+    "hardwrap": false
+  },
+  "sourceType": "module",
+  "tags": {
+    "allowUnknownTags": true,
+    "dictionaries": ["jsdoc", "closure"]
   }
 }

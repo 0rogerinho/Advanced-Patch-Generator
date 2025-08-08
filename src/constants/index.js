@@ -8,15 +8,15 @@ export const DEFAULT_OPTIONS = {
   verify: true,
   showProgress: true,
   // Novas opções para arquivos grandes
-  largeFileThreshold: 100 * 1024 * 1024, // 100MB
-  hugeFileThreshold: 1024 * 1024 * 1024, // 1GB
-  extremeFileThreshold: 5 * 1024 * 1024 * 1024, // 5GB
+  largeFileThreshold: 10 * 1024 * 1024, // 10MB - ativa otimizações muito cedo
+  hugeFileThreshold: 500 * 1024 * 1024, // 500MB - threshold muito menor  
+  extremeFileThreshold: 1000 * 1024 * 1024, // 1gb - ativa modo extremo para arquivos de 500MB+
   chunkSize: 64 * 1024 * 1024, // 64MB para processamento em chunks
   memoryLimit: 512 * 1024 * 1024, // 512MB limite de memória
   timeout: 300000, // 5 minutos
   // Novas opções para arquivos extremamente grandes
   enableChunkProcessing: true,
-  maxChunkSize: 500 * 1024 * 1024, // 500MB por chunk
+  maxChunkSize: 128 * 1024 * 1024, // 128MB por chunk - otimizado para máxima velocidade
   enableStreaming: true,
 };
 
@@ -94,9 +94,9 @@ export const METRICS = {
     MILLISECOND: 1000,
     MINUTE: 60000,
   },
-  // Limites para arquivos grandes (removida limitação de 2GB)
-  LARGE_FILE_THRESHOLD: 100 * 1024 * 1024, // 100MB
-  HUGE_FILE_THRESHOLD: 1024 * 1024 * 1024, // 1GB
-  EXTREME_FILE_THRESHOLD: 5 * 1024 * 1024 * 1024, // 5GB
+  // Limites otimizados para máxima velocidade
+  LARGE_FILE_THRESHOLD: 10 * 1024 * 1024, // 10MB
+  HUGE_FILE_THRESHOLD: 500 * 1024 * 1024, // 500MB  
+  EXTREME_FILE_THRESHOLD: 1000 * 1024 * 1024, // 1gb
   // Removido MAX_FILE_SIZE para permitir arquivos maiores que 2GB
 };

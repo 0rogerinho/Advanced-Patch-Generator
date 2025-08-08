@@ -1,201 +1,201 @@
-# Guia de Contribuição
+# Contribution Guide
 
-Obrigado por considerar contribuir para o Advanced Patch Generator! Este documento fornece diretrizes para contribuições.
+Thank you for considering contributing to Advanced Patch Generator! This document provides guidelines for contributions.
 
-## 🚀 Como Contribuir
+## 🚀 How to Contribute
 
-### 1. Configuração do Ambiente
+### 1. Environment Setup
 
-1. **Fork o repositório**
-2. **Clone seu fork:**
+1. **Fork the repository**
+2. **Clone your fork:**
    ```bash
-   git clone https://github.com/seu-usuario/advanced-patch-generator.git
+   git clone https://github.com/your-username/advanced-patch-generator.git
    cd advanced-patch-generator
    ```
 
-3. **Instale as dependências:**
+3. **Install dependencies:**
    ```bash
    npm install
    ```
 
-4. **Instale o Xdelta3:**
-   - **Windows:** `choco install xdelta3` ou `scoop install xdelta3`
+4. **Install Xdelta3:**
+   - **Windows:** `choco install xdelta3` or `scoop install xdelta3`
    - **Linux:** `sudo apt-get install xdelta3`
    - **macOS:** `brew install xdelta3`
 
-### 2. Desenvolvimento
+### 2. Development
 
-1. **Crie uma branch para sua feature:**
+1. **Create a branch for your feature:**
    ```bash
-   git checkout -b feature/nova-funcionalidade
+   git checkout -b feature/new-functionality
    ```
 
-2. **Faça suas alterações**
+2. **Make your changes**
 
-3. **Execute os testes:**
+3. **Run tests:**
    ```bash
    npm test
    ```
 
-4. **Verifique o linting:**
+4. **Check linting:**
    ```bash
    npm run lint
    ```
 
-5. **Commit suas mudanças:**
+5. **Commit your changes:**
    ```bash
-   git commit -m 'feat: adiciona nova funcionalidade'
+   git commit -m 'feat: add new functionality'
    ```
 
-6. **Push para sua branch:**
+6. **Push to your branch:**
    ```bash
-   git push origin feature/nova-funcionalidade
+   git push origin feature/new-functionality
    ```
 
 ### 3. Pull Request
 
-1. **Abra um Pull Request** no GitHub
-2. **Descreva suas mudanças** claramente
-3. **Inclua testes** se aplicável
-4. **Atualize a documentação** se necessário
+1. **Open a Pull Request** on GitHub
+2. **Describe your changes** clearly
+3. **Include tests** if applicable
+4. **Update documentation** if necessary
 
-## 📋 Diretrizes de Código
+## 📋 Code Guidelines
 
-### Convenções de Commit
+### Commit Conventions
 
-Use o formato [Conventional Commits](https://www.conventionalcommits.org/):
+Use [Conventional Commits](https://www.conventionalcommits.org/) format:
 
-- `feat:` Nova funcionalidade
-- `fix:` Correção de bug
-- `docs:` Documentação
-- `style:` Formatação de código
-- `refactor:` Refatoração
-- `test:` Testes
-- `chore:` Tarefas de manutenção
+- `feat:` New feature
+- `fix:` Bug fix
+- `docs:` Documentation
+- `style:` Code formatting
+- `refactor:` Refactoring
+- `test:` Tests
+- `chore:` Maintenance tasks
 
-### Padrões de Código
+### Code Standards
 
-- **Indentação:** 2 espaços
-- **Aspas:** Simples (`'`)
-- **Ponto e vírgula:** Sempre
-- **Comprimento de linha:** Máximo 80 caracteres
-- **Nomes de variáveis:** camelCase
-- **Nomes de classes:** PascalCase
+- **Indentation:** 2 spaces
+- **Quotes:** Single (`'`)
+- **Semicolons:** Always
+- **Line length:** Maximum 80 characters
+- **Variable names:** camelCase
+- **Class names:** PascalCase
 
-### Documentação
+### Documentation
 
-- **JSDoc:** Use para documentar funções públicas
-- **README:** Atualize quando adicionar novas funcionalidades
-- **Exemplos:** Inclua exemplos de uso
+- **JSDoc:** Use to document public functions
+- **README:** Update when adding new features
+- **Examples:** Include usage examples
 
-### Testes
+### Tests
 
-- **Cobertura:** Mantenha alta cobertura de testes
-- **Casos de teste:** Inclua casos positivos e negativos
-- **Testes de integração:** Para funcionalidades complexas
+- **Coverage:** Maintain high test coverage
+- **Test cases:** Include positive and negative cases
+- **Integration tests:** For complex features
 
-## 🐛 Reportando Bugs
+## 🐛 Reporting Bugs
 
-### Antes de Reportar
+### Before Reporting
 
-1. **Verifique se já foi reportado**
-2. **Teste com a versão mais recente**
-3. **Reproduza o problema**
+1. **Check if it's already reported**
+2. **Test with the latest version**
+3. **Reproduce the issue**
 
-### Informações Necessárias
+### Required Information
 
-- **Versão do Node.js**
-- **Sistema operacional**
-- **Versão do Xdelta3**
-- **Passos para reproduzir**
-- **Comportamento esperado vs. atual**
-- **Logs de erro** (se aplicável)
+- **Node.js version**
+- **Operating system**
+- **Xdelta3 version**
+- **Steps to reproduce**
+- **Expected vs. actual behavior**
+- **Error logs** (if applicable)
 
-## 💡 Sugerindo Melhorias
+## 💡 Suggesting Improvements
 
-### Antes de Sugerir
+### Before Suggesting
 
-1. **Verifique se já foi sugerido**
-2. **Pesquise alternativas existentes**
-3. **Considere o impacto**
+1. **Check if it's already suggested**
+2. **Research existing alternatives**
+3. **Consider the impact**
 
-### Informações Necessárias
+### Required Information
 
-- **Descrição clara da melhoria**
-- **Casos de uso**
-- **Benefícios esperados**
-- **Possíveis desvantagens**
+- **Clear description of the improvement**
+- **Use cases**
+- **Expected benefits**
+- **Possible drawbacks**
 
-## 🏷️ Versões
+## 🏷️ Versions
 
-### Versionamento
+### Versioning
 
-Seguimos [Semantic Versioning](https://semver.org/):
+We follow [Semantic Versioning](https://semver.org/):
 
-- **MAJOR:** Mudanças incompatíveis
-- **MINOR:** Novas funcionalidades compatíveis
-- **PATCH:** Correções compatíveis
+- **MAJOR:** Breaking changes
+- **MINOR:** Compatible new features
+- **PATCH:** Compatible fixes
 
 ### Changelog
 
-- **Mantenha o CHANGELOG.md atualizado**
-- **Use o formato Keep a Changelog**
-- **Inclua todas as mudanças relevantes**
+- **Keep CHANGELOG.md updated**
+- **Use Keep a Changelog format**
+- **Include all relevant changes**
 
-## 🤝 Comunicação
+## 🤝 Communication
 
-### Canais
+### Channels
 
-- **Issues:** Para bugs e melhorias
-- **Discussions:** Para discussões gerais
-- **Pull Requests:** Para contribuições
+- **Issues:** For bugs and improvements
+- **Discussions:** For general discussions
+- **Pull Requests:** For contributions
 
-### Código de Conduta
+### Code of Conduct
 
-- **Seja respeitoso**
-- **Mantenha o foco no projeto**
-- **Ajude outros contribuidores**
+- **Be respectful**
+- **Stay focused on the project**
+- **Help other contributors**
 
-## 📚 Recursos Úteis
+## 📚 Useful Resources
 
-### Documentação
+### Documentation
 
 - [Node.js](https://nodejs.org/docs/)
 - [Xdelta3](https://github.com/jmacd/xdelta)
 - [ESLint](https://eslint.org/docs/)
 
-### Ferramentas
+### Tools
 
-- **ESLint:** Para linting
-- **JSDoc:** Para documentação
-- **GitHub Actions:** Para CI/CD
+- **ESLint:** For linting
+- **JSDoc:** For documentation
+- **GitHub Actions:** For CI/CD
 
-## 🎯 Áreas de Contribuição
+## 🎯 Contribution Areas
 
-### Prioridades
+### Priorities
 
-1. **Correções de bugs**
-2. **Melhorias de performance**
-3. **Novas funcionalidades**
-4. **Documentação**
-5. **Testes**
+1. **Bug fixes**
+2. **Performance improvements**
+3. **New features**
+4. **Documentation**
+5. **Tests**
 
-### Ideias de Melhorias
+### Improvement Ideas
 
-- **Suporte a mais formatos de patch**
-- **Interface gráfica**
-- **Integração com CI/CD**
-- **Plugins para editores**
-- **API REST**
+- **Support for more patch formats**
+- **Graphical interface**
+- **CI/CD integration**
+- **Editor plugins**
+- **REST API**
 
-## 📞 Suporte
+## 📞 Support
 
-Se você tiver dúvidas sobre contribuição:
+If you have questions about contributing:
 
-- **Abra uma issue** para discussão
-- **Use o template de issue** apropriado
-- **Seja específico** sobre sua dúvida
+- **Open an issue** for discussion
+- **Use the appropriate issue template**
+- **Be specific** about your question
 
-## 🙏 Agradecimentos
+## 🙏 Acknowledgments
 
-Obrigado por contribuir para tornar o Advanced Patch Generator melhor para todos!
+Thank you for contributing to make Advanced Patch Generator better for everyone!

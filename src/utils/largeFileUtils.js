@@ -72,13 +72,13 @@ class LargeFileUtils {
    */
   static getOptimizedCompressionLevel(fileSize) {
     if (fileSize > METRICS.EXTREME_FILE_THRESHOLD) {
-      return 1; // Compressão mínima para arquivos extremamente grandes
+      return 0; // Compressão zero para máxima velocidade (>1GB)
     } else if (fileSize > METRICS.HUGE_FILE_THRESHOLD) {
-      return 3; // Compressão baixa para arquivos muito grandes
+      return 0; // Compressão zero também para arquivos >500MB
     } else if (fileSize > METRICS.LARGE_FILE_THRESHOLD) {
-      return 6; // Compressão média para arquivos grandes
+      return 1; // Compressão mínima para arquivos grandes (>50MB)
     }
-    return 9; // Compressão máxima para arquivos pequenos
+    return 3; // Compressão baixa para arquivos pequenos (era 6)
   }
 
   /**
@@ -112,61 +112,84 @@ class LargeFileUtils {
       const totalSize = stats.size;
       const chunks = [];
       
-      const readStream = createReadStream(filePath);
+      // Usa um buffer menor para reduzir o uso de memória
+      const readStream = createReadStream(filePath, {
+        highWaterMark: Math.min(64 * 1024 * 1024, chunkSize) // 64MB ou menor
+      });
+      
       let chunkIndex = 0;
       let bytesRead = 0;
-      let currentChunk = [];
+      let currentChunkPath = path.join(outputDir, `chunk_${chunkIndex}.bin`);
+      let writeStream = createWriteStream(currentChunkPath);
       
       return new Promise((resolve, reject) => {
-        readStream.on('data', (chunk) => {
-          currentChunk.push(chunk);
-          bytesRead += chunk.length;
-          
-          if (bytesRead >= chunkSize) {
-            const chunkPath = path.join(outputDir, `chunk_${chunkIndex}.bin`);
-            const writeStream = createWriteStream(chunkPath);
+        readStream.on('data', async (chunk) => {
+          try {
+            bytesRead += chunk.length;
             
-            const buffer = Buffer.concat(currentChunk);
-            writeStream.write(buffer);
-            writeStream.end();
+            // Escreve o chunk diretamente no arquivo
+            if (!writeStream.write(chunk)) {
+              // Se o buffer estiver cheio, aguarda o drain
+              await new Promise(resolve => writeStream.once('drain', resolve));
+            }
             
-            chunks.push({
-              index: chunkIndex,
-              path: chunkPath,
-              size: buffer.length,
-              startByte: chunkIndex * chunkSize,
-              endByte: Math.min((chunkIndex + 1) * chunkSize, totalSize)
-            });
-            
-            chunkIndex++;
-            bytesRead = 0;
-            currentChunk = [];
+            if (bytesRead >= chunkSize) {
+              // Fecha o stream atual e aguarda finalização
+              await new Promise(resolve => {
+                writeStream.end(() => {
+                  chunks.push({
+                    index: chunkIndex,
+                    path: currentChunkPath,
+                    size: bytesRead,
+                    startByte: chunkIndex * chunkSize,
+                    endByte: Math.min((chunkIndex + 1) * chunkSize, totalSize)
+                  });
+                  resolve();
+                });
+              });
+              
+              // Prepara o próximo chunk
+              chunkIndex++;
+              bytesRead = 0;
+              currentChunkPath = path.join(outputDir, `chunk_${chunkIndex}.bin`);
+              writeStream = createWriteStream(currentChunkPath);
+            }
+          } catch (error) {
+            readStream.destroy();
+            writeStream.destroy();
+            reject(error);
           }
         });
         
-        readStream.on('end', () => {
-          // Processa o último chunk se houver dados restantes
-          if (currentChunk.length > 0) {
-            const chunkPath = path.join(outputDir, `chunk_${chunkIndex}.bin`);
-            const writeStream = createWriteStream(chunkPath);
-            
-            const buffer = Buffer.concat(currentChunk);
-            writeStream.write(buffer);
-            writeStream.end();
-            
-            chunks.push({
-              index: chunkIndex,
-              path: chunkPath,
-              size: buffer.length,
-              startByte: chunkIndex * chunkSize,
-              endByte: totalSize
+        readStream.on('end', async () => {
+          // Finaliza o último chunk se houver dados
+          if (bytesRead > 0) {
+            await new Promise(resolve => {
+              writeStream.end(() => {
+                chunks.push({
+                  index: chunkIndex,
+                  path: currentChunkPath,
+                  size: bytesRead,
+                  startByte: chunkIndex * chunkSize,
+                  endByte: totalSize
+                });
+                resolve();
+              });
             });
           }
           
           resolve(chunks);
         });
         
-        readStream.on('error', reject);
+        readStream.on('error', (error) => {
+          writeStream.destroy();
+          reject(error);
+        });
+        
+        writeStream.on('error', (error) => {
+          readStream.destroy();
+          reject(error);
+        });
       });
     } catch (error) {
       throw new Error(`Erro ao criar chunks: ${error.message}`);
@@ -202,39 +225,101 @@ class LargeFileUtils {
    */
   static async compareFilesStream(file1, file2) {
     try {
-      const stream1 = createReadStream(file1);
-      const stream2 = createReadStream(file2);
+      // Primeiro verifica se os tamanhos são iguais
+      const [stats1, stats2] = await Promise.all([
+        fs.stat(file1),
+        fs.stat(file2)
+      ]);
       
-      let isEqual = true;
-      let position = 0;
+      if (stats1.size !== stats2.size) {
+        console.log(`Tamanhos diferentes: ${stats1.size} vs ${stats2.size}`);
+        return false;
+      }
+      
+      const chunkSize = 32 * 1024 * 1024; // 32MB chunks para melhor performance
+      const stream1 = createReadStream(file1, { highWaterMark: chunkSize });
+      const stream2 = createReadStream(file2, { highWaterMark: chunkSize });
       
       return new Promise((resolve, reject) => {
-        stream1.on('data', (chunk1) => {
-          // Lê o chunk correspondente do segundo arquivo
-          const chunk2 = stream2.read(chunk1.length);
-          
-          if (!chunk2 || !chunk1.equals(chunk2)) {
-            isEqual = false;
-            stream1.destroy();
-            stream2.destroy();
-            resolve(false);
+        let chunk1Buffer = null;
+        let chunk2Buffer = null;
+        let stream1Ended = false;
+        let stream2Ended = false;
+        let position = 0;
+        
+        const compareChunks = () => {
+          if (chunk1Buffer && chunk2Buffer) {
+            const minLength = Math.min(chunk1Buffer.length, chunk2Buffer.length);
+            
+            // Compara os bytes
+            if (!chunk1Buffer.slice(0, minLength).equals(chunk2Buffer.slice(0, minLength))) {
+              stream1.destroy();
+              stream2.destroy();
+              resolve(false);
+              return;
+            }
+            
+            position += minLength;
+            
+            // Remove os bytes comparados
+            if (chunk1Buffer.length === minLength) {
+              chunk1Buffer = null;
+            } else {
+              chunk1Buffer = chunk1Buffer.slice(minLength);
+            }
+            
+            if (chunk2Buffer.length === minLength) {
+              chunk2Buffer = null;
+            } else {
+              chunk2Buffer = chunk2Buffer.slice(minLength);
+            }
+            
+            // Continua comparando se ainda há dados
+            compareChunks();
           }
-          
-          position += chunk1.length;
+        };
+        
+        stream1.on('data', (chunk) => {
+          chunk1Buffer = chunk1Buffer ? Buffer.concat([chunk1Buffer, chunk]) : chunk;
+          compareChunks();
+        });
+        
+        stream2.on('data', (chunk) => {
+          chunk2Buffer = chunk2Buffer ? Buffer.concat([chunk2Buffer, chunk]) : chunk;
+          compareChunks();
         });
         
         stream1.on('end', () => {
-          // Verifica se o segundo arquivo também terminou
-          const remaining = stream2.read();
-          if (remaining) {
-            isEqual = false;
+          stream1Ended = true;
+          if (stream2Ended) {
+            // Verifica se sobraram dados em algum buffer
+            const hasRemainingData = (chunk1Buffer && chunk1Buffer.length > 0) || 
+                                   (chunk2Buffer && chunk2Buffer.length > 0);
+            resolve(!hasRemainingData);
           }
-          stream2.destroy();
-          resolve(isEqual);
         });
         
-        stream1.on('error', reject);
-        stream2.on('error', reject);
+        stream2.on('end', () => {
+          stream2Ended = true;
+          if (stream1Ended) {
+            // Verifica se sobraram dados em algum buffer
+            const hasRemainingData = (chunk1Buffer && chunk1Buffer.length > 0) || 
+                                   (chunk2Buffer && chunk2Buffer.length > 0);
+            resolve(!hasRemainingData);
+          }
+        });
+        
+        stream1.on('error', (error) => {
+          console.error('Erro no stream1:', error);
+          stream2.destroy();
+          reject(error);
+        });
+        
+        stream2.on('error', (error) => {
+          console.error('Erro no stream2:', error);
+          stream1.destroy();
+          reject(error);
+        });
       });
     } catch (error) {
       console.error('Erro ao comparar arquivos:', error);

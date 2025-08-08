@@ -34,6 +34,18 @@ class MetricsUtils {
   }
 
   /**
+   * Formata duração em unidades legíveis (alias para formatTime)
+   * @param {number} ms - Milissegundos
+   * @returns {string} String formatada com unidade
+   * @example
+   * MetricsUtils.formatDuration(500) // "500ms"
+   * MetricsUtils.formatDuration(1500) // "1.50s"
+   */
+  static formatDuration(ms) {
+    return this.formatTime(ms);
+  }
+
+  /**
    * Calcula a taxa de compressão entre dois tamanhos
    * @param {number} originalSize - Tamanho original em bytes
    * @param {number} compressedSize - Tamanho comprimido em bytes

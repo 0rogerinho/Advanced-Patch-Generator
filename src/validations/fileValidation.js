@@ -191,6 +191,49 @@ class FileValidation {
 
     return result;
   }
+
+  /**
+   * Valida se os arquivos de entrada são válidos para verificar patch
+   * @param {string} oldFile - Caminho do arquivo original
+   * @param {string} patchFile - Caminho do arquivo de patch
+   * @returns {Promise<Object>} Resultado da validação
+   */
+  static async validateVerifyInputs(oldFile, patchFile) {
+    const result = {
+      isValid: true,
+      errors: [],
+      warnings: []
+    };
+
+    // Verifica se os arquivos existem
+    if (!(await this.fileExists(oldFile))) {
+      result.isValid = false;
+      result.errors.push(`Arquivo original não encontrado: ${oldFile}`);
+    }
+
+    if (!(await this.fileExists(patchFile))) {
+      result.isValid = false;
+      result.errors.push(`Arquivo de patch não encontrado: ${patchFile}`);
+    }
+
+    // Verifica se os arquivos são legíveis
+    if (await this.fileExists(oldFile) && !(await this.isReadable(oldFile))) {
+      result.isValid = false;
+      result.errors.push(`Arquivo original não é legível: ${oldFile}`);
+    }
+
+    if (await this.fileExists(patchFile) && !(await this.isReadable(patchFile))) {
+      result.isValid = false;
+      result.errors.push(`Arquivo de patch não é legível: ${patchFile}`);
+    }
+
+    // Verifica se o arquivo de patch tem a extensão correta
+    if (await this.fileExists(patchFile) && !patchFile.toLowerCase().endsWith('.xdelta')) {
+      result.warnings.push('O arquivo de patch não tem a extensão .xdelta');
+    }
+
+    return result;
+  }
 }
 
 export default FileValidation;
