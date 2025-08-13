@@ -1,34 +1,34 @@
 import { EventEmitter } from 'events';
 
 // Progress event data
-export type ProgressData = {
+export interface ProgressData {
   percentage: number;
   message: string;
   current?: number;
   total?: number;
   speed?: string;
   eta?: string;
-};
+}
 
 // Error data
-export type ErrorData = {
+export interface ErrorData {
   message: string;
   code?: string;
-  details?: any;
-};
+  details?: unknown;
+}
 
 // File information
-export type FileInfo = {
+export interface FileInfo {
   exists: boolean;
   size: number;
   sizeFormatted: string;
   modified: Date;
   path: string;
   isDirectory: boolean;
-};
+}
 
 // Patch result
-export type PatchResult = {
+export interface PatchResult {
   success: boolean;
   error?: string;
   patchFile: FileInfo;
@@ -40,10 +40,10 @@ export type PatchResult = {
     patchSize: number;
     isLargeFile: boolean;
   };
-};
+}
 
 // Apply patch result
-export type ApplyPatchResult = {
+export interface ApplyPatchResult {
   success: boolean;
   error?: string;
   newFile: FileInfo;
@@ -51,20 +51,20 @@ export type ApplyPatchResult = {
     duration: number;
     durationFormatted: string;
   };
-};
+}
 
 // Verify patch result
-export type VerifyPatchResult = {
+export interface VerifyPatchResult {
   isValid: boolean;
   error?: string;
   metrics: {
     duration: number;
     durationFormatted: string;
   };
-};
+}
 
 // Batch operation result
-export type BatchResult = {
+export interface BatchResult {
   file: string;
   status: 'success' | 'error' | 'skipped';
   error?: string;
@@ -72,10 +72,10 @@ export type BatchResult = {
     duration: number;
     durationFormatted: string;
   };
-};
+}
 
-// Main options type
-export type AdvancedPatchGeneratorOptions = {
+// Main options interface
+export interface AdvancedPatchGeneratorOptions {
   xdeltaPath?: string;
   compression?: number;
   verify?: boolean;
@@ -86,104 +86,112 @@ export type AdvancedPatchGeneratorOptions = {
   enableChunkProcessing?: boolean;
   onProgress?: (progress: ProgressData) => void;
   onError?: (error: ErrorData) => void;
-  onComplete?: (result: any) => void;
-};
+  onComplete?: (
+    result: PatchResult | ApplyPatchResult | VerifyPatchResult
+  ) => void;
+}
 
 // Patch creation options
-export type CreatePatchOptions = {
+export interface CreatePatchOptions {
   compression?: number;
   verify?: boolean;
   showProgress?: boolean;
   timeout?: number;
   onProgress?: (progress: ProgressData) => void;
   onError?: (error: ErrorData) => void;
-  onComplete?: (result: any) => void;
-};
+  onComplete?: (result: PatchResult) => void;
+}
 
 // Apply patch options
-export type ApplyPatchOptions = {
-  verify?: boolean;
+export interface ApplyPatchOptions {
   showProgress?: boolean;
   timeout?: number;
   onProgress?: (progress: ProgressData) => void;
   onError?: (error: ErrorData) => void;
-  onComplete?: (result: any) => void;
-};
+  onComplete?: (result: ApplyPatchResult) => void;
+}
 
 // Batch options
-export type BatchOptions = {
-  maxParallel?: number;
-  compression?: number;
-  verify?: boolean;
+export interface BatchOptions {
   showProgress?: boolean;
   timeout?: number;
-};
+  onProgress?: (progress: ProgressData) => void;
+  onError?: (error: ErrorData) => void;
+  onComplete?: (result: BatchResult[]) => void;
+}
 
-// Chunk information for large files
-export type ChunkInfo = {
+// Command execution result
+export interface CommandResult {
+  success: boolean;
+  stdout: string;
+  stderr: string;
+  duration: number;
+}
+
+// Chunk information for large file processing
+export interface ChunkInfo {
   start: number;
   end: number;
   size: number;
   index: number;
-};
+}
 
-// Large file processing options
-export type LargeFileOptions = {
+// Large file options
+export interface LargeFileOptions {
   chunkSize?: number;
   overlap?: number;
   compression?: number;
-  timeout?: number;
-};
+  onProgress?: (progress: ProgressData) => void;
+}
 
-// Command execution result
-export type CommandResult = {
+// Patch analysis result
+export interface PatchAnalysisResult {
   success: boolean;
-  stdout: string;
-  stderr: string;
-  error?: Error;
-  duration: number;
-};
+  error?: string;
+  patchInfo: {
+    size: number;
+    sizeFormatted: string;
+    compressionRatio?: number;
+    estimatedOriginalSize?: number;
+    estimatedNewSize?: number;
+  };
+  metadata?: Record<string, unknown>;
+}
 
-// Metrics utilities type
-export type MetricsUtils = {
-  formatBytes(bytes: number): string;
-  formatDuration(ms: number): string;
-  calculateCompressionRatio(originalSize: number, patchSize: number): number;
-  calculateSpeed(bytes: number, duration: number): string;
-  calculateETA(processed: number, total: number, speed: number): string;
-};
+// Patch comparison result
+export interface PatchComparisonResult {
+  success: boolean;
+  error?: string;
+  comparison: {
+    sizeDifference: number;
+    sizeDifferenceFormatted: string;
+    compressionRatioDifference: number;
+    similarity: number; // 0-100%
+  };
+}
 
-// Display utilities type
-export type DisplayUtils = {
-  createProgressBar(total: number): (current: number) => void;
-  formatFileInfo(fileInfo: FileInfo): string;
-  formatPatchResult(result: PatchResult): string;
-  formatBatchResult(results: BatchResult[]): string;
-};
+// Patch information result
+export interface PatchInfoResult {
+  success: boolean;
+  error?: string;
+  info: {
+    size: number;
+    sizeFormatted: string;
+    format: string;
+    version?: string;
+    flags?: string[];
+    metadata?: Record<string, unknown>;
+  };
+}
 
-// File validation type
-export type FileValidation = {
-  validateFileExists(filePath: string): Promise<boolean>;
-  validateFileReadable(filePath: string): Promise<boolean>;
-  validateFileWritable(filePath: string): Promise<boolean>;
-  validateDirectoryExists(dirPath: string): Promise<boolean>;
-  validateXdeltaAvailable(): Promise<boolean>;
-};
-
-// Patch analyzer type
-export type PatchAnalyzer = {
-  analyzePatch(patchFile: string): Promise<any>;
-  comparePatches(patch1: string, patch2: string): Promise<any>;
-  getPatchInfo(patchFile: string): Promise<any>;
-};
-
-// Main class type
-export type IAdvancedPatchGenerator = EventEmitter & {
+// Main class interface
+export interface IAdvancedPatchGenerator {
   xdeltaPath: string;
   defaultOptions: AdvancedPatchGeneratorOptions;
 
-  getFileInfo(filePath: string): Promise<FileInfo>;
+  // Core methods
   checkXdelta(): Promise<boolean>;
+  getFileInfo(filePath: string): Promise<FileInfo>;
   createPatch(
     oldFile: string,
     newFile: string,
@@ -201,6 +209,17 @@ export type IAdvancedPatchGenerator = EventEmitter & {
     patchFile: string,
     expectedFile: string
   ): Promise<VerifyPatchResult>;
+
+  // Large file methods
+  createPatchWithChunks(
+    oldFile: string,
+    newFile: string,
+    patchFile: string,
+    options?: LargeFileOptions
+  ): Promise<PatchResult>;
+  combinePatchChunks(patchChunks: string[], outputPath: string): Promise<void>;
+
+  // Batch methods
   createBatchPatches(
     oldDir: string,
     newDir: string,
@@ -213,11 +232,33 @@ export type IAdvancedPatchGenerator = EventEmitter & {
     outputDir: string,
     options?: BatchOptions
   ): Promise<BatchResult[]>;
-  createPatchWithChunks(
-    oldFile: string,
-    newFile: string,
-    patchFile: string,
-    options?: LargeFileOptions
-  ): Promise<PatchResult>;
-  combinePatchChunks(patchChunks: string[], outputPath: string): Promise<void>;
-};
+
+  // Event emitter methods
+  on(event: 'progress', listener: (data: ProgressData) => void): this;
+  on(event: 'error', listener: (error: ErrorData) => void): this;
+  on(
+    event: 'complete',
+    listener: (
+      result: PatchResult | ApplyPatchResult | VerifyPatchResult
+    ) => void
+  ): this;
+  on(event: string, listener: (...args: unknown[]) => void): this;
+
+  emit(event: 'progress', data: ProgressData): boolean;
+  emit(event: 'error', error: ErrorData): boolean;
+  emit(
+    event: 'complete',
+    result: PatchResult | ApplyPatchResult | VerifyPatchResult
+  ): boolean;
+  emit(event: string, ...args: unknown[]): boolean;
+}
+
+// Patch analyzer interface
+export interface IPatchAnalyzer {
+  analyzePatch(patchFile: string): Promise<PatchAnalysisResult>;
+  comparePatches(
+    patch1: string,
+    patch2: string
+  ): Promise<PatchComparisonResult>;
+  getPatchInfo(patchFile: string): Promise<PatchInfoResult>;
+}

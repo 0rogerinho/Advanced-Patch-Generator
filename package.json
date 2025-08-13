@@ -1,6 +1,6 @@
 {
   "name": "advanced-patch-generator",
-  "version": "2.2.0",
+  "version": "2.2.2",
   "description": "Advanced patch manager using Xdelta for efficient patch creation and application with progress support, events, and error handling",
   "main": "dist/index.js",
   "type": "module",

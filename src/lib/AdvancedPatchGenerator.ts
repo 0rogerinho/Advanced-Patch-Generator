@@ -15,6 +15,8 @@ import type {
   BatchOptions,
   ProgressData,
   ErrorData,
+  LargeFileOptions,
+  IAdvancedPatchGenerator,
 } from '../types/index.js';
 
 /**
@@ -22,15 +24,21 @@ import type {
  * Simplifies the process of creating and applying patches using Xdelta
  * @class AdvancedPatchGenerator
  * @extends EventEmitter
+ * @implements IAdvancedPatchGenerator
  */
-class AdvancedPatchGenerator extends EventEmitter {
+class AdvancedPatchGenerator
+  extends EventEmitter
+  implements IAdvancedPatchGenerator
+{
   public xdeltaPath: string;
   public defaultOptions: AdvancedPatchGeneratorOptions;
   private _xdeltaChecked: boolean;
   private _xdeltaAvailable: boolean;
   private onProgressCallback: ((progress: ProgressData) => void) | undefined;
   private onErrorCallback: ((error: ErrorData) => void) | undefined;
-  private onCompleteCallback: ((result: any) => void) | undefined;
+  private onCompleteCallback:
+    | ((result: PatchResult | ApplyPatchResult | VerifyPatchResult) => void)
+    | undefined;
 
   /**
    * Creates a new instance of AdvancedPatchGenerator
@@ -70,7 +78,10 @@ class AdvancedPatchGenerator extends EventEmitter {
    * @param options - Options that may contain callbacks
    * @private
    */
-  private _emitProgressWithOptions(data: ProgressData, options?: any): void {
+  private _emitProgressWithOptions(
+    data: ProgressData,
+    options?: CreatePatchOptions | ApplyPatchOptions | BatchOptions
+  ): void {
     this.emit('progress', data);
     if (this.onProgressCallback) {
       this.onProgressCallback(data);
@@ -98,7 +109,10 @@ class AdvancedPatchGenerator extends EventEmitter {
    * @param options - Options that may contain callbacks
    * @private
    */
-  private _emitErrorWithOptions(error: ErrorData, options?: any): void {
+  private _emitErrorWithOptions(
+    error: ErrorData,
+    options?: CreatePatchOptions | ApplyPatchOptions | BatchOptions
+  ): void {
     this.emit('error', error);
     if (this.onErrorCallback) {
       this.onErrorCallback(error);
@@ -113,7 +127,9 @@ class AdvancedPatchGenerator extends EventEmitter {
    * @param result - Operation result
    * @private
    */
-  private _emitComplete(result: any): void {
+  private _emitComplete(
+    result: PatchResult | ApplyPatchResult | VerifyPatchResult
+  ): void {
     this.emit('complete', result);
     if (this.onCompleteCallback) {
       this.onCompleteCallback(result);
@@ -126,13 +142,16 @@ class AdvancedPatchGenerator extends EventEmitter {
    * @param options - Options that may contain callbacks
    * @private
    */
-  private _emitCompleteWithOptions(result: any, options?: any): void {
+  private _emitCompleteWithOptions(
+    result: PatchResult | ApplyPatchResult | VerifyPatchResult,
+    options?: CreatePatchOptions | ApplyPatchOptions | BatchOptions
+  ): void {
     this.emit('complete', result);
     if (this.onCompleteCallback) {
       this.onCompleteCallback(result);
     }
     if (options?.onComplete) {
-      options.onComplete(result);
+      options.onComplete(result as any); // Type assertion needed due to callback signature differences
     }
   }
 
@@ -558,7 +577,7 @@ class AdvancedPatchGenerator extends EventEmitter {
     oldFile: string,
     newFile: string,
     patchFile: string,
-    options: any = {}
+    options: LargeFileOptions = {}
   ): Promise<PatchResult> {
     // Implementation for chunk processing
     // This is a simplified version - the full implementation would be more complex
