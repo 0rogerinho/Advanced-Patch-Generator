@@ -1,34 +1,34 @@
 import { EventEmitter } from 'events';
 
 // Progress event data
-export interface ProgressData {
+export type ProgressData = {
   percentage: number;
   message: string;
   current?: number;
   total?: number;
   speed?: string;
   eta?: string;
-}
+};
 
 // Error data
-export interface ErrorData {
+export type ErrorData = {
   message: string;
   code?: string;
   details?: unknown;
-}
+};
 
 // File information
-export interface FileInfo {
+export type FileInfo = {
   exists: boolean;
   size: number;
   sizeFormatted: string;
   modified: Date;
   path: string;
   isDirectory: boolean;
-}
+};
 
 // Patch result
-export interface PatchResult {
+export type PatchResult = {
   success: boolean;
   error?: string;
   patchFile: FileInfo;
@@ -40,10 +40,10 @@ export interface PatchResult {
     patchSize: number;
     isLargeFile: boolean;
   };
-}
+};
 
 // Apply patch result
-export interface ApplyPatchResult {
+export type ApplyPatchResult = {
   success: boolean;
   error?: string;
   newFile: FileInfo;
@@ -51,20 +51,20 @@ export interface ApplyPatchResult {
     duration: number;
     durationFormatted: string;
   };
-}
+};
 
 // Verify patch result
-export interface VerifyPatchResult {
+export type VerifyPatchResult = {
   isValid: boolean;
   error?: string;
   metrics: {
     duration: number;
     durationFormatted: string;
   };
-}
+};
 
 // Batch operation result
-export interface BatchResult {
+export type BatchResult = {
   file: string;
   status: 'success' | 'error' | 'skipped';
   error?: string;
@@ -72,10 +72,10 @@ export interface BatchResult {
     duration: number;
     durationFormatted: string;
   };
-}
+};
 
-// Main options interface
-export interface AdvancedPatchGeneratorOptions {
+// Main options type
+export type AdvancedPatchGeneratorOptions = {
   xdeltaPath?: string;
   compression?: number;
   verify?: boolean;
@@ -89,10 +89,10 @@ export interface AdvancedPatchGeneratorOptions {
   onComplete?: (
     result: PatchResult | ApplyPatchResult | VerifyPatchResult
   ) => void;
-}
+};
 
 // Patch creation options
-export interface CreatePatchOptions {
+export type CreatePatchOptions = {
   compression?: number;
   verify?: boolean;
   showProgress?: boolean;
@@ -100,52 +100,52 @@ export interface CreatePatchOptions {
   onProgress?: (progress: ProgressData) => void;
   onError?: (error: ErrorData) => void;
   onComplete?: (result: PatchResult) => void;
-}
+};
 
 // Apply patch options
-export interface ApplyPatchOptions {
+export type ApplyPatchOptions = {
   showProgress?: boolean;
   timeout?: number;
   onProgress?: (progress: ProgressData) => void;
   onError?: (error: ErrorData) => void;
   onComplete?: (result: ApplyPatchResult) => void;
-}
+};
 
 // Batch options
-export interface BatchOptions {
+export type BatchOptions = {
   showProgress?: boolean;
   timeout?: number;
   onProgress?: (progress: ProgressData) => void;
   onError?: (error: ErrorData) => void;
   onComplete?: (result: BatchResult[]) => void;
-}
+};
 
 // Command execution result
-export interface CommandResult {
+export type CommandResult = {
   success: boolean;
   stdout: string;
   stderr: string;
   duration: number;
-}
+};
 
 // Chunk information for large file processing
-export interface ChunkInfo {
+export type ChunkInfo = {
   start: number;
   end: number;
   size: number;
   index: number;
-}
+};
 
 // Large file options
-export interface LargeFileOptions {
+export type LargeFileOptions = {
   chunkSize?: number;
   overlap?: number;
   compression?: number;
   onProgress?: (progress: ProgressData) => void;
-}
+};
 
 // Patch analysis result
-export interface PatchAnalysisResult {
+export type PatchAnalysisResult = {
   success: boolean;
   error?: string;
   patchInfo: {
@@ -156,10 +156,10 @@ export interface PatchAnalysisResult {
     estimatedNewSize?: number;
   };
   metadata?: Record<string, unknown>;
-}
+};
 
 // Patch comparison result
-export interface PatchComparisonResult {
+export type PatchComparisonResult = {
   success: boolean;
   error?: string;
   comparison: {
@@ -168,10 +168,10 @@ export interface PatchComparisonResult {
     compressionRatioDifference: number;
     similarity: number; // 0-100%
   };
-}
+};
 
 // Patch information result
-export interface PatchInfoResult {
+export type PatchInfoResult = {
   success: boolean;
   error?: string;
   info: {
@@ -182,10 +182,10 @@ export interface PatchInfoResult {
     flags?: string[];
     metadata?: Record<string, unknown>;
   };
-}
+};
 
-// Main class interface
-export interface IAdvancedPatchGenerator {
+// Main class type
+export type IAdvancedPatchGenerator = EventEmitter & {
   xdeltaPath: string;
   defaultOptions: AdvancedPatchGeneratorOptions;
 
@@ -234,15 +234,24 @@ export interface IAdvancedPatchGenerator {
   ): Promise<BatchResult[]>;
 
   // Event emitter methods
-  on(event: 'progress', listener: (data: ProgressData) => void): this;
-  on(event: 'error', listener: (error: ErrorData) => void): this;
+  on(
+    event: 'progress',
+    listener: (data: ProgressData) => void
+  ): IAdvancedPatchGenerator;
+  on(
+    event: 'error',
+    listener: (error: ErrorData) => void
+  ): IAdvancedPatchGenerator;
   on(
     event: 'complete',
     listener: (
       result: PatchResult | ApplyPatchResult | VerifyPatchResult
     ) => void
-  ): this;
-  on(event: string, listener: (...args: unknown[]) => void): this;
+  ): IAdvancedPatchGenerator;
+  on(
+    event: string,
+    listener: (...args: unknown[]) => void
+  ): IAdvancedPatchGenerator;
 
   emit(event: 'progress', data: ProgressData): boolean;
   emit(event: 'error', error: ErrorData): boolean;
@@ -251,14 +260,14 @@ export interface IAdvancedPatchGenerator {
     result: PatchResult | ApplyPatchResult | VerifyPatchResult
   ): boolean;
   emit(event: string, ...args: unknown[]): boolean;
-}
+};
 
-// Patch analyzer interface
-export interface IPatchAnalyzer {
+// Patch analyzer type
+export type IPatchAnalyzer = {
   analyzePatch(patchFile: string): Promise<PatchAnalysisResult>;
   comparePatches(
     patch1: string,
     patch2: string
   ): Promise<PatchComparisonResult>;
   getPatchInfo(patchFile: string): Promise<PatchInfoResult>;
-}
+};

@@ -26,11 +26,11 @@ TypeScript (.ts) → Compilação → JavaScript (.js) → Execução
 
 ## Estrutura de Tipos Implementada
 
-### 1. **Interfaces Principais**
+### 1. **Tipos Principais**
 
 ```typescript
-// Classe principal
-interface IAdvancedPatchGenerator {
+// Classe principal usando intersection types
+export type IAdvancedPatchGenerator = EventEmitter & {
   xdeltaPath: string;
   defaultOptions: AdvancedPatchGeneratorOptions;
   
@@ -41,27 +41,27 @@ interface IAdvancedPatchGenerator {
   verifyPatch(oldFile: string, patchFile: string, expectedFile: string): Promise<VerifyPatchResult>;
   
   // Eventos tipados
-  on(event: 'progress', listener: (data: ProgressData) => void): this;
-  on(event: 'error', listener: (error: ErrorData) => void): this;
-  on(event: 'complete', listener: (result: PatchResult | ApplyPatchResult | VerifyPatchResult) => void): this;
-}
+  on(event: 'progress', listener: (data: ProgressData) => void): IAdvancedPatchGenerator;
+  on(event: 'error', listener: (error: ErrorData) => void): IAdvancedPatchGenerator;
+  on(event: 'complete', listener: (result: PatchResult | ApplyPatchResult | VerifyPatchResult) => void): IAdvancedPatchGenerator;
+};
 ```
 
 ### 2. **Tipos de Dados**
 
 ```typescript
 // Progresso com tipagem completa
-interface ProgressData {
+export type ProgressData = {
   percentage: number;        // 0-100
   message: string;           // Mensagem descritiva
   current?: number;          // Bytes processados
   total?: number;            // Total de bytes
   speed?: string;            // Velocidade (futuro)
   eta?: string;              // Tempo estimado (futuro)
-}
+};
 
 // Resultados tipados
-interface PatchResult {
+export type PatchResult = {
   success: boolean;
   error?: string;
   patchFile: FileInfo;
@@ -73,13 +73,13 @@ interface PatchResult {
     patchSize: number;
     isLargeFile: boolean;
   };
-}
+};
 ```
 
 ### 3. **Opções Configuráveis**
 
 ```typescript
-interface CreatePatchOptions {
+export type CreatePatchOptions = {
   compression?: number;       // 0-9
   verify?: boolean;           // Verificar após criação
   showProgress?: boolean;     // Mostrar progresso
@@ -89,7 +89,32 @@ interface CreatePatchOptions {
   onProgress?: (progress: ProgressData) => void;
   onError?: (error: ErrorData) => void;
   onComplete?: (result: PatchResult) => void;
-}
+};
+```
+
+## Por que Usar `type` em vez de `interface`?
+
+### 🎯 **Vantagens do `type`:**
+
+1. **Flexibilidade Superior**: Pode representar unions, intersections, mapped types e mais
+2. **Intersection Types**: Permite combinar tipos facilmente (`EventEmitter & CustomMethods`)
+3. **Union Types**: Melhor para tipos que podem ser diferentes estruturas
+4. **Mapped Types**: Transformação automática de tipos existentes
+5. **Condicional Types**: Tipos que mudam baseado em condições
+6. **Consistência**: Todos os tipos seguem o mesmo padrão
+
+### 🔄 **Exemplo de Intersection Type:**
+
+```typescript
+// Combina EventEmitter com métodos customizados
+export type IAdvancedPatchGenerator = EventEmitter & {
+  xdeltaPath: string;
+  createPatch(...): Promise<PatchResult>;
+  // ... outros métodos
+};
+
+// Isso permite que a classe tenha tanto os métodos do EventEmitter
+// quanto os métodos customizados, com tipagem completa
 ```
 
 ## Exemplos de Uso com Tipagem
@@ -269,14 +294,41 @@ const result = await patchGen.createPatch('old.txt', 'new.txt', 'patch.xdelta', 
 }
 ```
 
+## Vantagens dos Tipos sobre Interfaces
+
+### 🔧 **Flexibilidade:**
+
+```typescript
+// Intersection types (não possível com interface)
+export type AdvancedClass = BaseClass & {
+  customMethod(): void;
+};
+
+// Union types (não possível com interface)
+export type Result = SuccessResult | ErrorResult;
+
+// Mapped types (não possível com interface)
+export type Optional<T> = {
+  [K in keyof T]?: T[K];
+};
+```
+
+### 📚 **Consistência:**
+
+- Todos os tipos seguem o mesmo padrão
+- Melhor legibilidade e manutenção
+- Padrão moderno do TypeScript
+- Compatibilidade com ferramentas de análise estática
+
 ## Conclusão
 
-A migração para TypeScript puro oferece:
+A migração para TypeScript puro com **tipos** oferece:
 
 1. **Melhor Experiência de Desenvolvimento** com IntelliSense e detecção de erros
-2. **Código Mais Robusto** com tipagem estática
+2. **Código Mais Robusto** com tipagem estática e flexível
 3. **Compatibilidade Total** com JavaScript existente
 4. **Manutenibilidade Superior** para projetos em crescimento
 5. **Zero Overhead** em produção
+6. **Flexibilidade Avançada** com intersection types, union types e mapped types
 
-O TypeScript é o futuro do desenvolvimento JavaScript, e esta biblioteca está na vanguarda dessa evolução! 🚀
+O TypeScript com **tipos** é o futuro do desenvolvimento JavaScript, oferecendo a melhor combinação de flexibilidade, segurança e performance! 🚀
