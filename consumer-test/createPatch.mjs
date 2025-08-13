@@ -16,7 +16,14 @@ async function createPatch() {
     './patch.xdelta',
     {
       onProgress: (data) => {
-        console.log(`📊 ${data.percentage}% - ${data.message}`);
+        // Mostra progresso detalhado com current/total
+        if (data.current !== undefined && data.total !== undefined) {
+          const currentMB = (data.current / (1024 * 1024)).toFixed(2);
+          const totalMB = (data.total / (1024 * 1024)).toFixed(2);
+          console.log(`📊 ${data.percentage}% - ${data.message} (${currentMB}MB / ${totalMB}MB)`);
+        } else {
+          console.log(`📊 ${data.percentage}% - ${data.message}`);
+        }
       },
       onError: (error) => {
         console.error(`❌ Error: ${error.message}`);

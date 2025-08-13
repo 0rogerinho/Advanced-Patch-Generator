@@ -3,7 +3,8 @@
  */
 
 export const DEFAULT_OPTIONS = {
-  xdeltaPath: 'xdelta3.exe',
+  // Use a cross-platform default. On Windows, PATHEXT resolves .exe automatically.
+  xdeltaPath: 'xdelta3',
   compression: 9,
   verify: true,
   showProgress: true,

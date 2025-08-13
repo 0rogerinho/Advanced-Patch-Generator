@@ -38,6 +38,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.log('  node dist/index.js <command> [options]\n');
     console.log('Commands:');
     console.log('  check     - Check if Xdelta3 is available');
+    console.log('  install   - Guide/attempt to install Xdelta3 on Windows');
     console.log('  info      - Show file information');
     console.log('  create    - Create a patch');
     console.log('  apply     - Apply a patch');
@@ -76,6 +77,68 @@ if (import.meta.url === `file://${process.argv[1]}`) {
             console.log('💡 Install Xdelta3 first.');
           }
           break;
+
+        case 'install':
+          console.log('🛠️  Xdelta3 installer helper (Windows)');
+          try {
+            const { default: path } = await import('path');
+            const script = path.resolve(
+              process.cwd(),
+              'scripts',
+              'install-xdelta3.js'
+            );
+            const { default: CommandUtils } = await import(
+              './utils/commandUtils.js'
+            );
+            // Tenta diversos comandos comuns
+            const checks = ['xdelta3 -h', 'xdelta3.exe -h', 'where xdelta3'];
+            for (const c of checks) {
+              const r = await CommandUtils.executeCommand(c);
+              if (r.success) {
+                console.log('✅ Xdelta3 already available.');
+                process.exit(0);
+              }
+            }
+            console.log(
+              '❌ Not found. Attempting Chocolatey (if available)...'
+            );
+            let r = await CommandUtils.executeCommand('choco --version');
+            if (r.success) {
+              r = await CommandUtils.executeCommand('choco install xdelta3 -y');
+              console.log(
+                r.success
+                  ? '✅ Installed via Chocolatey'
+                  : '❌ Failed via Chocolatey'
+              );
+              process.exit(r.success ? 0 : 1);
+            }
+            console.log('ℹ️  Chocolatey not available. Trying Scoop...');
+            r = await CommandUtils.executeCommand('scoop --version');
+            if (r.success) {
+              r = await CommandUtils.executeCommand('scoop install xdelta3');
+              console.log(
+                r.success ? '✅ Installed via Scoop' : '❌ Failed via Scoop'
+              );
+              process.exit(r.success ? 0 : 1);
+            }
+            console.log('ℹ️  Scoop not available. Trying Winget...');
+            r = await CommandUtils.executeCommand('winget -v');
+            if (r.success) {
+              r = await CommandUtils.executeCommand('winget install xdelta3');
+              console.log(
+                r.success ? '✅ Installed via Winget' : '❌ Failed via Winget'
+              );
+              process.exit(r.success ? 0 : 1);
+            }
+            console.log(
+              '📋 Manual install instructions: https://github.com/jmacd/xdelta/releases'
+            );
+            process.exit(1);
+          } catch (e) {
+            console.error('❌ Installer helper error:', (e as Error).message);
+            process.exit(1);
+          }
+        // No break needed; process will exit above
 
         case 'info':
           if (args.length < 2) {

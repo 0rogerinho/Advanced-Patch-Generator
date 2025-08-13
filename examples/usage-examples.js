@@ -269,6 +269,54 @@ async function exemploTratamentoErros() {
   }
 }
 
+// Exemplo de barra de progresso visual
+async function createPatchWithProgressBar() {
+  console.log('\n🎯 Criando patch com barra de progresso visual...\n');
+  
+  const patchGen = new AdvancedPatchGenerator({
+    compression: 6,
+    verify: true,
+    showProgress: true,
+    onProgress: (data) => {
+      // Cria uma barra de progresso visual
+      const barLength = 30;
+      const filledLength = Math.round((data.percentage / 100) * barLength);
+      const bar = '█'.repeat(filledLength) + '░'.repeat(barLength - filledLength);
+      
+      // Mostra informações detalhadas
+      let progressInfo = `${data.percentage.toString().padStart(3)}% [${bar}] ${data.message}`;
+      
+      if (data.current !== undefined && data.total !== undefined) {
+        const currentMB = (data.current / (1024 * 1024)).toFixed(2);
+        const totalMB = (data.total / (1024 * 1024)).toFixed(2);
+        progressInfo += ` (${currentMB}MB / ${totalMB}MB)`;
+      }
+      
+      // Limpa a linha anterior e mostra o novo progresso
+      process.stdout.write(`\r${progressInfo}`);
+      
+      if (data.percentage === 100) {
+        console.log('\n'); // Nova linha quando completar
+      }
+    },
+    onComplete: (result) => {
+      console.log(`\n✅ Patch criado com sucesso!`);
+      console.log(`   Arquivo: ${result.patchFile.path}`);
+      console.log(`   Tamanho: ${result.patchFile.sizeFormatted}`);
+      console.log(`   Duração: ${result.metrics.durationFormatted}`);
+    }
+  });
+
+  try {
+    await patchGen.checkXdelta();
+    const result = await createPatchWithProgressBar();
+    return result;
+  } catch (error) {
+    console.error('Erro no exemplo de barra de progresso:', error.message);
+    return null;
+  }
+}
+
 // Função principal
 async function main() {
   console.log('🚀 Advanced Patch Generator - Exemplos de Uso');
@@ -297,6 +345,7 @@ async function main() {
   await exemploProcessamentoLote();
   await exemploArquivosGrandes();
   await exemploTratamentoErros();
+  await createPatchWithProgressBar(); // Adicionado o novo exemplo
 
   console.log('\n🎉 Todos os exemplos concluídos!');
   console.log('📚 Consulte a documentação para mais informações.');

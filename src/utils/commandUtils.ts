@@ -13,13 +13,12 @@ class CommandUtils {
   static async executeCommand(command: string): Promise<CommandResult> {
     return new Promise(resolve => {
       const startTime = Date.now();
-      const parts = command.split(' ');
-      const cmd = parts[0]!;
-      const args = parts.slice(1);
 
-      const child = spawn(cmd, args, {
+      // Use a single command string with shell to preserve quotes and spaces in paths
+      const child = spawn(command, {
         stdio: ['pipe', 'pipe', 'pipe'],
         shell: true,
+        windowsVerbatimArguments: true,
       });
 
       let stdout = '';
