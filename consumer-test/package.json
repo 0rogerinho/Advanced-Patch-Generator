@@ -1,0 +1,17 @@
+{
+  "name": "consumer-test",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "create:patch": "node createPatch.mjs",
+    "apply:patch": "node applyPatch.mjs",
+    "xdelta:check": "node -e \"import('advanced-patch-generator').then(m=>new m.default().checkXdelta().then(a=>console.log(a?'Xdelta OK':'Xdelta não encontrado')));\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "advanced-patch-generator": "file:.."
+  }
+}
