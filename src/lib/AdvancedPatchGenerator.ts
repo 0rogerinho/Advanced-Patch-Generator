@@ -61,7 +61,7 @@ class AdvancedPatchGenerator
         ...DEFAULT_OPTIONS,
         ...options,
       };
-      this.xdeltaPath = this.defaultOptions.xdeltaPath;
+      this.xdeltaPath = this.defaultOptions.xdeltaPath!;
     }
 
     this._xdeltaChecked = false;
