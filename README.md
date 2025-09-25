@@ -21,50 +21,19 @@
 
 ## 📦 Installation
 
-### Prerequisites
-
-Advanced Patch Generator requires **Xdelta3** installed on the system.
-
-#### Windows
-```bash
-# Using Scoop
-scoop install xdelta3
-
-# Using Chocolatey
-choco install xdelta3
-
-# Using Winget
-winget install xdelta3
-
-# Or download manually from https://github.com/jmacd/xdelta/releases
-```
-
-#### macOS
-```bash
-# Using Homebrew
-brew install xdelta
-
-# Using MacPorts
-sudo port install xdelta3
-```
-
-#### Linux
-```bash
-# Ubuntu/Debian
-sudo apt-get install xdelta3
-
-# CentOS/RHEL
-sudo yum install xdelta3
-
-# Arch Linux
-sudo pacman -S xdelta3
-```
-
 ### Package Installation
 
 ```bash
 npm install advanced-patch-generator
 ```
+
+### Prerequisites
+
+**No installation required!** 🎉 
+
+Advanced Patch Generator includes **xdelta3-3.1.0.exe** and works out of the box on Windows. The library uses **ONLY** the included executable and will **NOT** use any system-installed version of Xdelta3.
+
+> **Important**: The library is designed to work exclusively with the included `xdelta3-3.1.0.exe` file. It will not attempt to use any xdelta installed on your system.
 
 ## 🎯 Quick Start
 
@@ -399,35 +368,30 @@ const results = await patchGen.createBatchPatches(
 ### Common Issues
 
 #### Xdelta3 not found
-```bash
-# Windows (Recomendado)
-choco install xdelta3
+The library includes `xdelta3-3.1.0.exe` and should work without installation. If you encounter this error:
 
-# Windows (Alternativas)
-scoop install xdelta3
-winget install xdelta3
-
-# macOS
-brew install xdelta
-
-# Linux
-sudo apt-get install xdelta3
-```
+1. **Verify the executable exists**: Check if `xdelta3-3.1.0.exe` is present in the project root
+2. **Check file permissions**: Ensure the executable has proper permissions to run
+3. **Use custom path**: If needed, you can specify a custom path:
+   ```typescript
+   const patchGen = new AdvancedPatchGenerator({
+     xdeltaPath: "C:\\path\\to\\xdelta3.exe"
+   });
+   ```
 
 #### Windows-specific Issues
 
-**Problema**: "Xdelta3 not found on system" mesmo após instalação
+**Problema**: "Xdelta3 executable not found" 
 ```bash
-# Solução 1: Reiniciar o terminal
-# Feche e abra um novo terminal/PowerShell
+# Solução 1: Verificar se o arquivo existe
+dir xdelta3-3.1.0.exe
 
-# Solução 2: Verificar instalação
-where xdelta3
-xdelta3 -h
+# Solução 2: Verificar permissões
+# Clique com botão direito no arquivo > Propriedades > Desbloquear
 
-# Solução 3: Configurar caminho manualmente
+# Solução 3: Usar caminho personalizado
 const patchGen = new AdvancedPatchGenerator({
-  xdeltaPath: "C:\\ProgramData\\chocolatey\\bin\\xdelta3.exe"
+  xdeltaPath: "C:\\caminho\\para\\xdelta3.exe"
 });
 ```
 

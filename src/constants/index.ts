@@ -2,9 +2,19 @@
  * System constants
  */
 
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get the directory of the current module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Get the project root directory (go up from src/constants to project root)
+const projectRoot = path.resolve(__dirname, '../../');
+
 export const DEFAULT_OPTIONS = {
-  // Use a cross-platform default. On Windows, PATHEXT resolves .exe automatically.
-  xdeltaPath: 'xdelta3',
+  // Use the included xdelta3-3.1.0.exe file
+  xdeltaPath: path.join(projectRoot, 'xdelta3-3.1.0.exe'),
   compression: 9,
   verify: true,
   showProgress: true,
@@ -50,20 +60,15 @@ export const LARGE_FILE_OPTIONS = {
 } as const;
 
 export const MESSAGES = {
-  XDELTA_NOT_FOUND: 'Xdelta3 not found on system.',
+  XDELTA_NOT_FOUND:
+    'Xdelta3 local executable not found. The included xdelta3-3.1.0.exe file may be missing or corrupted.',
   XDELTA_INSTALL_INSTRUCTIONS: `
-📋 To install Xdelta3 on Windows:
-1. Visit: https://github.com/jmacd/xdelta/releases
-2. Download the latest version for Windows
-3. Extract the xdelta3.exe file
-4. Place xdelta3.exe in a folder in PATH
-   (e.g., C:\\Windows\\System32\\ or add to system PATH)
+📋 The library uses ONLY the included xdelta3-3.1.0.exe file and does not use system-installed xdelta.
 
-💡 Alternatives:
-   - Use Scoop: scoop install xdelta3
-   - Use Chocolatey: choco install xdelta3
-
-🔧 Or configure the path manually:
+🔧 If you encounter issues, you can:
+1. Ensure xdelta3-3.1.0.exe is present in the project root
+2. Check if the file has proper execution permissions
+3. Or configure a custom path manually:
    const patchGen = new AdvancedPatchGenerator({
      xdeltaPath: "C:\\path\\to\\xdelta3.exe"
    });

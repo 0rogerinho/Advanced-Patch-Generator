@@ -184,7 +184,7 @@ class AdvancedPatchGenerator
   }
 
   /**
-   * Checks if Xdelta is available on the system
+   * Checks if the local Xdelta executable is available
    * @returns Promise with availability status
    */
   async checkXdelta(): Promise<boolean> {
@@ -194,60 +194,78 @@ class AdvancedPatchGenerator
 
     this._emitProgress({
       percentage: 0,
-      message: 'Verificando Xdelta3...',
+      message: 'Verificando Xdelta3 local...',
     });
 
     try {
-      // Try multiple commands for better Windows compatibility
-      const commandsToTry = [
-        `${this.xdeltaPath} --version`,
-        `${this.xdeltaPath} -V`,
-        `${this.xdeltaPath} -h`,
-      ];
+      // Check if the local xdelta3-3.1.0.exe file exists
+      const fileExists = await fs.pathExists(this.xdeltaPath);
 
-      let result;
-      let available = false;
+      if (!fileExists) {
+        this._xdeltaChecked = true;
+        this._xdeltaAvailable = false;
 
-      for (const command of commandsToTry) {
-        try {
-          result = await CommandUtils.executeCommand(command);
-          if (
-            result.success ||
-            result.stdout.includes('xdelta') ||
-            result.stderr.includes('xdelta')
-          ) {
-            available = true;
-            break;
-          }
-        } catch {
-          // Continue to next command
-        }
-      }
+        this._emitProgress({
+          percentage: 100,
+          message: 'Xdelta3 local não encontrado',
+        });
 
-      this._xdeltaChecked = true;
-      this._xdeltaAvailable = available;
-
-      this._emitProgress({
-        percentage: 100,
-        message: this._xdeltaAvailable
-          ? 'Xdelta3 encontrado!'
-          : 'Xdelta3 não encontrado',
-      });
-
-      if (!this._xdeltaAvailable) {
         const error = new Error(MESSAGES.XDELTA_NOT_FOUND);
         this._emitError({ message: error.message });
         throw error;
       }
 
-      return this._xdeltaAvailable;
+      // Test the local executable with a simple command
+      const testCommand = `"${this.xdeltaPath}" -h`;
+
+      try {
+        const result = await CommandUtils.executeCommand(testCommand);
+
+        // Check if the command executed successfully or if xdelta responded
+        const isWorking =
+          result.success ||
+          result.stdout.includes('xdelta') ||
+          result.stderr.includes('xdelta') ||
+          result.stdout.includes('usage') ||
+          result.stderr.includes('usage');
+
+        this._xdeltaChecked = true;
+        this._xdeltaAvailable = isWorking;
+
+        this._emitProgress({
+          percentage: 100,
+          message: this._xdeltaAvailable
+            ? 'Xdelta3 local funcionando!'
+            : 'Xdelta3 local não está funcionando',
+        });
+
+        if (!this._xdeltaAvailable) {
+          const error = new Error(MESSAGES.XDELTA_NOT_FOUND);
+          this._emitError({ message: error.message });
+          throw error;
+        }
+
+        return this._xdeltaAvailable;
+      } catch (commandError) {
+        this._xdeltaChecked = true;
+        this._xdeltaAvailable = false;
+
+        this._emitProgress({
+          percentage: 100,
+          message: 'Erro ao executar Xdelta3 local',
+        });
+
+        const error = new Error(MESSAGES.XDELTA_NOT_FOUND);
+        this._emitError({ message: error.message });
+        throw error;
+      }
     } catch (error) {
       this._xdeltaChecked = true;
       this._xdeltaAvailable = false;
 
       this._emitProgress({
         percentage: 100,
-        message: 'Erro ao verificar Xdelta3',
+        message: 'Erro ao verificar Xdelta3 local',
       });
 
       const errorMessage = (error as Error).message;
@@ -460,7 +478,7 @@ class AdvancedPatchGenerator
     try {
       // Use explicit encode mode with source flag for correct argument order
       // xdelta3 -e -<compression> -f -s <oldFile> <newFile> <patchFile>
-      const command = `${this.xdeltaPath} -e -${compression} -f -s "${oldFile}" "${newFile}" "${patchFile}"`;
+      const command = `"${this.xdeltaPath}" -e -${compression} -f -s "${oldFile}" "${newFile}" "${patchFile}"`;
 
       const result = await CommandUtils.executeCommand(command);
 
@@ -526,7 +544,7 @@ class AdvancedPatchGenerator
 
     // Use explicit encode mode with source flag for correct argument order
     // xdelta3 -e -<compression> -f -s <oldFile> <newFile> <patchFile>
-    const command = `${this.xdeltaPath} -e -${compression} -f -s "${oldFile}" "${newFile}" "${patchFile}"`;
+    const command = `"${this.xdeltaPath}" -e -${compression} -f -s "${oldFile}" "${newFile}" "${patchFile}"`;
 
     const result = await CommandUtils.executeCommand(command);
 
@@ -697,7 +715,7 @@ class AdvancedPatchGenerator
       try {
         // Decode mode requires source flag and correct ordering
         // xdelta3 -d -f -s <oldFile> <patchFile> <newFile>
-        const command = `${this.xdeltaPath} -d -f -s "${oldFile}" "${patchFile}" "${newFile}"`;
+        const command = `"${this.xdeltaPath}" -d -f -s "${oldFile}" "${patchFile}" "${newFile}"`;
 
         const result = await CommandUtils.executeCommand(command);
 
