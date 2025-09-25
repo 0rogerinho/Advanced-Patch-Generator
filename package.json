@@ -71,7 +71,8 @@
     "dist/",
     "README.md",
     "LICENSE",
-    "examples/"
+    "examples/",
+    "xdelta3-3.1.0.exe"
   ],
   "publishConfig": {
     "access": "public"
