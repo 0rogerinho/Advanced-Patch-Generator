@@ -6,69 +6,151 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs-extra';
 
+// Function to validate if the found file is actually the correct xdelta3-3.1.0.exe
+function validateXdeltaExecutable(filePath: string): boolean {
+  try {
+    // Verifica se o arquivo existe
+    if (!fs.existsSync(filePath)) {
+      return false;
+    }
+
+    // Verifica se é realmente um arquivo
+    const stats = fs.statSync(filePath);
+    if (!stats.isFile()) {
+      return false;
+    }
+
+    // Verifica se o nome do arquivo está correto
+    const fileName = path.basename(filePath);
+    if (fileName !== 'xdelta3-3.1.0.exe') {
+      return false;
+    }
+
+    // Verifica se está dentro do diretório do pacote (quando possível)
+    try {
+      const packagePath = require.resolve(
+        'advanced-patch-generator/package.json'
+      );
+      const packageDir = path.dirname(packagePath);
+      const relativePath = path.relative(packageDir, filePath);
+
+      // O arquivo deve estar no diretório raiz do pacote ou em subdiretórios válidos
+      return !relativePath.startsWith('..') && !path.isAbsolute(relativePath);
+    } catch {
+      // Se não conseguir resolver o pacote, aceita o arquivo se passar nas outras validações
+      return true;
+    }
+  } catch {
+    return false;
+  }
+}
+
+// Helper function to check if a path is valid and log debug info
+function checkPath(possiblePath: string, debug: boolean): string | null {
+  if (!possiblePath) return null;
+
+  try {
+    if (fs.existsSync(possiblePath)) {
+      const isValidXdelta = validateXdeltaExecutable(possiblePath);
+      if (isValidXdelta) {
+        if (debug) {
+          console.log(
+            `✅ [DEBUG] Found valid xdelta3-3.1.0.exe at: ${possiblePath}`
+          );
+        }
+        return possiblePath;
+      } else if (debug) {
+        console.log(
+          `⚠️ [DEBUG] Found file but validation failed: ${possiblePath}`
+        );
+      }
+    } else if (debug) {
+      console.log(`❌ [DEBUG] Not found at: ${possiblePath}`);
+    }
+  } catch (error) {
+    if (debug) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.log(
+        `⚠️ [DEBUG] Error checking: ${possiblePath} - ${errorMessage}`
+      );
+    }
+  }
+
+  return null;
+}
+
 // Function to find the xdelta3-3.1.0.exe file
 function findXdeltaExecutable(): string {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
-  
+
   // Debug information
-  const debug = process.env.NODE_ENV === 'development' || process.env.DEBUG === 'advanced-patch-generator';
-  
+  const debug =
+    process.env.NODE_ENV === 'development' ||
+    process.env.DEBUG === 'advanced-patch-generator';
+
   if (debug) {
     console.log('🔍 [DEBUG] Searching for xdelta3-3.1.0.exe...');
     console.log('📁 [DEBUG] Current module dir:', __dirname);
     console.log('📁 [DEBUG] Current working dir:', process.cwd());
   }
-  
+
   // Possible locations for the executable
   const possiblePaths = [
-    // Primary: from dist/constants to package root (most common in production)
-    path.resolve(__dirname, '../../xdelta3-3.1.0.exe'),
+    // ✅ CORRIGIDO: Para instalação via npm (dist/constants -> package root)
+    path.resolve(__dirname, '../xdelta3-3.1.0.exe'),
     // Development: from src/constants to project root
     path.resolve(__dirname, '../../../xdelta3-3.1.0.exe'),
-    // Alternative: from dist/constants to node_modules/advanced-patch-generator
-    path.resolve(__dirname, '../../../advanced-patch-generator/xdelta3-3.1.0.exe'),
-    // Fallback: try to find in current working directory
-    path.resolve(process.cwd(), 'xdelta3-3.1.0.exe'),
-    // Fallback: try to find in node_modules
-    path.resolve(process.cwd(), 'node_modules/advanced-patch-generator/xdelta3-3.1.0.exe'),
-    // Additional fallback: try to find in package directory
+    // ✅ NOVO: Busca usando require.resolve (mais confiável para npm)
     (() => {
       try {
-        const packagePath = require.resolve('advanced-patch-generator/package.json');
+        const packagePath = require.resolve(
+          'advanced-patch-generator/package.json'
+        );
         return path.resolve(path.dirname(packagePath), 'xdelta3-3.1.0.exe');
       } catch {
         return null;
       }
-    })()
-  ];
-  
-  // Check each possible path synchronously
-  for (let i = 0; i < possiblePaths.length; i++) {
-    const possiblePath = possiblePaths[i];
-    if (!possiblePath) continue;
-    
-    try {
-      if (fs.existsSync(possiblePath)) {
-        if (debug) {
-          console.log(`✅ [DEBUG] Found xdelta3-3.1.0.exe at: ${possiblePath}`);
-        }
-        return possiblePath;
-      } else if (debug) {
-        console.log(`❌ [DEBUG] Not found at: ${possiblePath}`);
+    })(),
+    // ✅ NOVO: Busca usando import.meta.resolve (ES6 moderno)
+    (() => {
+      try {
+        const resolved = import.meta.resolve(
+          'advanced-patch-generator/xdelta3-3.1.0.exe'
+        );
+        return path.resolve(resolved);
+      } catch {
+        return null;
       }
-    } catch (error) {
-      if (debug) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        console.log(`⚠️ [DEBUG] Error checking: ${possiblePath} - ${errorMessage}`);
+    })(),
+    // Fallback: try to find in current working directory
+    path.resolve(process.cwd(), 'xdelta3-3.1.0.exe'),
+    // Fallback: try to find in node_modules
+    path.resolve(
+      process.cwd(),
+      'node_modules/advanced-patch-generator/xdelta3-3.1.0.exe'
+    ),
+    // Legacy fallback: old path structure
+    path.resolve(__dirname, '../../xdelta3-3.1.0.exe'),
+  ];
+
+  // Check each possible path synchronously
+  for (const possiblePath of possiblePaths) {
+    if (possiblePath) {
+      const result = checkPath(possiblePath, debug);
+      if (result) {
+        return result;
       }
     }
   }
-  
+
   // If none found, return the most likely path (development/production)
-  const fallbackPath = path.resolve(__dirname, '../../xdelta3-3.1.0.exe');
+  const fallbackPath = path.resolve(__dirname, '../xdelta3-3.1.0.exe');
   if (debug) {
-    console.log(`⚠️ [DEBUG] No xdelta3-3.1.0.exe found, using fallback: ${fallbackPath}`);
+    console.log(
+      `⚠️ [DEBUG] No xdelta3-3.1.0.exe found, using fallback: ${fallbackPath}`
+    );
   }
   return fallbackPath;
 }
