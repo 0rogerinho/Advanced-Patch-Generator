@@ -46,11 +46,24 @@ class AdvancedPatchGenerator
    */
   constructor(options: AdvancedPatchGeneratorOptions = {}) {
     super();
-    this.xdeltaPath = options.xdeltaPath || DEFAULT_OPTIONS.xdeltaPath;
-    this.defaultOptions = {
-      ...DEFAULT_OPTIONS,
-      ...options,
-    };
+
+    // Se xdeltaPath foi fornecido, use apenas ele (sem busca automática)
+    if (options.xdeltaPath) {
+      this.xdeltaPath = options.xdeltaPath;
+      this.defaultOptions = {
+        ...DEFAULT_OPTIONS,
+        ...options,
+        xdeltaPath: options.xdeltaPath, // Garante que o caminho personalizado seja mantido
+      };
+    } else {
+      // Se não foi fornecido, use a busca automática padrão
+      this.defaultOptions = {
+        ...DEFAULT_OPTIONS,
+        ...options,
+      };
+      this.xdeltaPath = this.defaultOptions.xdeltaPath;
+    }
+
     this._xdeltaChecked = false;
     this._xdeltaAvailable = false;
 
